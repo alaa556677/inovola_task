@@ -31,10 +31,13 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       await _initBox();
 
       List<ExpenseModel> expenses = _expenseBox.values.toList();
+      print('ExpenseRepository: Total expenses in box: ${expenses.length}');
 
       // Apply filter if specified
       if (filterType != null) {
+        print('ExpenseRepository: Applying filter: $filterType');
         expenses = _applyFilter(expenses, filterType);
+        print('ExpenseRepository: Expenses after filter: ${expenses.length}');
       }
 
       // Sort by date (newest first)
@@ -48,8 +51,14 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       }
 
       final entities = expenses.map((model) => model.toEntity()).toList();
+      print('ExpenseRepository: Returning ${entities.length} expense entities');
+      for (var entity in entities) {
+        print('ExpenseRepository: Entity - ${entity.category}: ${entity.amount} ${entity.currency} on ${entity.date}');
+      }
+      
       return Right(entities);
     } catch (e) {
+      print('ExpenseRepository: Error getting expenses: $e');
       return Left(Failure('Failed to get expenses: ${e.toString()}'));
     }
   }
@@ -59,12 +68,15 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       ExpenseEntity expense) async {
     try {
       await _initBox();
+      print('ExpenseRepository: Adding expense - ${expense.category}: ${expense.amount} ${expense.currency}');
 
       final model = ExpenseModel.fromEntity(expense);
       await _expenseBox.add(model);
+      print('ExpenseRepository: Successfully added expense to box');
 
       return Right(expense);
     } catch (e) {
+      print('ExpenseRepository: Error adding expense: $e');
       return Left(Failure('Failed to add expense: ${e.toString()}'));
     }
   }
@@ -212,27 +224,35 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
   List<ExpenseModel> _applyFilter(
       List<ExpenseModel> expenses, String filterType) {
     final now = DateTime.now();
+    print('ExpenseRepository: Filtering ${expenses.length} expenses with filter: $filterType');
 
     switch (filterType) {
       case 'This Month':
-        return expenses.where((expense) {
+        final filtered = expenses.where((expense) {
           return expense.date.year == now.year &&
               expense.date.month == now.month;
         }).toList();
+        print('ExpenseRepository: This Month filter returned ${filtered.length} expenses');
+        return filtered;
 
       case 'Last 7 Days':
         final sevenDaysAgo = now.subtract(const Duration(days: 7));
-        return expenses.where((expense) {
+        final filtered = expenses.where((expense) {
           return expense.date.isAfter(sevenDaysAgo);
         }).toList();
+        print('ExpenseRepository: Last 7 Days filter returned ${filtered.length} expenses');
+        return filtered;
 
       case 'Last 30 Days':
         final thirtyDaysAgo = now.subtract(const Duration(days: 30));
-        return expenses.where((expense) {
+        final filtered = expenses.where((expense) {
           return expense.date.isAfter(thirtyDaysAgo);
         }).toList();
+        print('ExpenseRepository: Last 30 Days filter returned ${filtered.length} expenses');
+        return filtered;
 
       default:
+        print('ExpenseRepository: No filter applied, returning all ${expenses.length} expenses');
         return expenses;
     }
   }

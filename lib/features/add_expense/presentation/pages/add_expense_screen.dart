@@ -342,8 +342,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             'Bills',
             'Home',
             'Other'
-          ]
-              .map((category) => CategoryWidget(
+          ].map((category) => CategoryWidget(
                     category: category,
                     onTap: () {
                       setState(() {

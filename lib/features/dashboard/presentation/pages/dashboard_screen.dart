@@ -26,32 +26,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Load both expenses and summary data
-    context
-        .read<DashboardBloc>()
-        .add(const GetAllExpensesEvents(filterType: 'This Month'));
-    context
-        .read<DashboardBloc>()
-        .add(const LoadDashboardSummary(filterType: 'This Month'));
+    context.read<DashboardBloc>().add(const GetAllExpensesEvents(filterType: 'This Month'));
+    context.read<DashboardBloc>().add(const LoadDashboardSummary(filterType: 'This Month'));
   }
 
   Future<void> _refreshData() async {
-    // Refresh both expenses and summary data
-    context
-        .read<DashboardBloc>()
-        .add(const GetAllExpensesEvents(filterType: 'This Month'));
-    context
-        .read<DashboardBloc>()
-        .add(const LoadDashboardSummary(filterType: 'This Month'));
+    context.read<DashboardBloc>().add(const GetAllExpensesEvents(filterType: 'This Month'));
+    context.read<DashboardBloc>().add(const LoadDashboardSummary(filterType: 'This Month'));
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocListener<DashboardBloc, DashboardStates>(
-      listener: (context, state) {
-        // This will be called whenever the dashboard state changes
-        // We can add specific logic here if needed
-      },
+      listener: (context, state) {},
       child: Scaffold(
         backgroundColor: AppColors.whiteColor,
         body: Stack(
@@ -89,30 +76,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   setHeightSpace(6),
                   Expanded(
                     child: BlocBuilder<DashboardBloc, DashboardStates>(
+                      buildWhen: (previous, current) {
+                        // Rebuild when expenses state changes
+                        return current is GetAllExpensesLoading ||
+                            current is GetAllExpensesSuccess ||
+                            current is GetAllExpensesError;
+                      },
                       builder: (context, state) {
-                        return state is GetAllExpensesLoading
-                            ? const LoadingWidget()
-                            : state is GetAllExpensesSuccess
-                                ? RefreshIndicator(
-                                    onRefresh: _refreshData,
-                                    child: state.expensesList.isEmpty
-                                        ? const Center(
-                                            child: Text('No expenses found'),
-                                          )
-                                        : ListView.separated(
-                                            itemBuilder: (context, index) =>
-                                                ExpenseCardWidget(
-                                              getExpenseEntity:
-                                                  state.expensesList[index],
-                                            ),
-                                            itemCount:
-                                                state.expensesList.length,
-                                            separatorBuilder:
-                                                (context, index) =>
-                                                    setHeightSpace(10),
-                                          ),
-                                  )
-                                : const SizedBox();
+                        if (state is GetAllExpensesLoading) {
+                          return const LoadingWidget();
+                        } else if (state is GetAllExpensesSuccess) {
+                          return RefreshIndicator(
+                            onRefresh: _refreshData,
+                            child: state.expensesList.isEmpty
+                                ?Center(
+                                    child: CustomTextWidget(text: 'No expenses found', fontSize: 14.sp,),
+                            ):ListView.separated(
+                              itemBuilder: (context, index) {
+                                final expense = state.expensesList[index];
+                                return ExpenseCardWidget(
+                                  getExpenseEntity: expense,
+                                );
+                              },
+                              itemCount: state.expensesList.length, separatorBuilder: (context, index) => setHeightSpace(10),
+                            ),
+                          );
+                        } else if (state is GetAllExpensesError) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CustomTextWidget(text: 'Error: ${state.errorMessage}', fontSize: 14.sp,),
+                                ElevatedButton(
+                                  onPressed: _refreshData,
+                                  child: CustomTextWidget(text: 'Retry', fontSize: 12.sp,),
+                                ),
+                              ],
+                            ),
+                          );
+                        } else {
+                          // Show loading for other states
+                          return const LoadingWidget();
+                        }
                       },
                     ),
                   )
@@ -122,21 +127,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         floatingActionButton: FloatingActionButton(
-          mini: true,
           shape: const CircleBorder(),
           onPressed: () async {
-            // Navigate to add expense and wait for result
             final result = await Navigator.pushNamed(context, "/add-expense");
-
-            // If we returned from add expense, refresh the dashboard
             if (result == true) {
-              // Refresh both expenses and summary data
-              context
-                  .read<DashboardBloc>()
-                  .add(const GetAllExpensesEvents(filterType: 'This Month'));
-              context
-                  .read<DashboardBloc>()
-                  .add(const LoadDashboardSummary(filterType: 'This Month'));
+              context.read<DashboardBloc>().add(const GetAllExpensesEvents(filterType: 'This Month'));
+              context.read<DashboardBloc>().add(const LoadDashboardSummary(filterType: 'This Month'));
             }
           },
           backgroundColor: Colors.blue,

@@ -9,7 +9,7 @@ class GetExpenseUseCase {
   GetExpenseUseCase(this.expenseRepository);
 
   Future<Either<Failure, List<ExpenseEntity>>> call(
-      CancelToken? cancelToken) async {
-    return await expenseRepository.getAllExpenses();
+      {CancelToken? cancelToken, String? filterType}) async {
+    return await expenseRepository.getAllExpenses(filterType: filterType);
   }
 }

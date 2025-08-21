@@ -85,59 +85,19 @@ class SummaryExpenseWidget extends StatelessWidget {
                           ],
                         ),
                       ),
-                      PopupMenuButton<String>(
-                        icon: const Icon(
-                          Icons.more_horiz,
-                          color: AppColors.whiteColor,
-                        ),
-                        onSelected: (value) {
-                          context.read<DashboardBloc>().add(ApplyFilter(value));
-                        },
-                        itemBuilder: (context) => [
-                          const PopupMenuItem(
-                            value: 'This Month',
-                            child: Text('This Month'),
-                          ),
-                          const PopupMenuItem(
-                            value: 'Last 7 Days',
-                            child: Text('Last 7 Days'),
-                          ),
-                          const PopupMenuItem(
-                            value: 'Last 30 Days',
-                            child: Text('Last 30 Days'),
-                          ),
-                        ],
+                      const Icon(
+                        Icons.more_horiz,
+                        color: AppColors.whiteColor,
                       ),
                     ],
                   ),
                   setHeightSpace(4),
-                  if (isLoading)
-                    Row(
-                      children: [
-                        SizedBox(
-                          width: 16.w,
-                          height: 16.w,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                                AppColors.whiteColor),
-                          ),
-                        ),
-                        setWidthSpace(8),
-                        CustomTextWidget(
-                          text: "Loading...",
-                          fontColor: AppColors.whiteColor,
-                          fontSize: 18.sp,
-                        ),
-                      ],
-                    )
-                  else
-                    CustomTextWidget(
-                      text: "\$ ${totalBalance.toStringAsFixed(2)}",
-                      fontColor: AppColors.whiteColor,
-                      fontSize: 18.sp,
-                    ),
-                  setHeightSpace(40),
+                  CustomTextWidget(
+                    text: isLoading ? "Loading ..." : "\$ ${totalBalance.toStringAsFixed(2)}",
+                    fontColor: AppColors.whiteColor,
+                    fontSize: 18.sp,
+                  ),
+                  setHeightSpace(50),
                   Row(
                     children: [
                       Expanded(

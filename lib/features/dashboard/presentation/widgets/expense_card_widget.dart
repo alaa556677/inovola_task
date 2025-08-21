@@ -7,6 +7,7 @@ import '../../../../../core/widgets/image_card_widget.dart';
 import '../../../../../core/widgets/set_height_width.dart';
 import '../../../../../core/widgets/text_default.dart';
 import '../../domain/entities/expense_entity.dart';
+import 'dart:io';
 
 class ExpenseCardWidget extends StatelessWidget {
   final ExpenseEntity getExpenseEntity;
@@ -27,16 +28,13 @@ class ExpenseCardWidget extends StatelessWidget {
       child: Row(
         children: [
           getExpenseEntity.receiptPath != null
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(8.r),
-                  child: Image.asset(
-                    getExpenseEntity.receiptPath!,
-                    width: 50.w,
-                    height: 50.h,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const ImageCardWidget(),
-                  ),
+              ? Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle
+            ),
+
+
+                  child: _buildReceiptImage(),
                 )
               : const ImageCardWidget(),
           setWidthSpace(12),
@@ -85,5 +83,40 @@ class ExpenseCardWidget extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildReceiptImage() {
+    try {
+      // Check if the path is a local file
+      if (getExpenseEntity.receiptPath!.startsWith('/')) {
+        final file = File(getExpenseEntity.receiptPath!);
+        if (file.existsSync()) {
+
+          return Container(
+            width: 50.w,
+            height: 50.h,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              image: DecorationImage(
+                image: FileImage(file),
+                fit: BoxFit.cover,
+              ),
+            ),
+          );
+        }
+      }
+      
+      // If not a local file, try to load as network image
+      return CachedNetworkImage(
+        imageUrl: getExpenseEntity.receiptPath!,
+        width: 50.w,
+        height: 50.h,
+        fit: BoxFit.cover,
+        placeholder: (context, url) => const ImageCardWidget(),
+        errorWidget: (context, url, error) => const ImageCardWidget(),
+      );
+    } catch (e) {
+      return const ImageCardWidget();
+    }
   }
 }

@@ -29,13 +29,22 @@ class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
 
   Future<void> _handleGetAllExpenses(
       GetAllExpensesEvents event, Emitter<DashboardStates> emit) async {
+    print('DashboardBloc: Loading expenses with filter: ${event.filterType}');
     safeEmit(GetAllExpensesLoading(), emit);
-    final result = await getExpenseUseCase(cancelToken);
+    final result = await getExpenseUseCase(
+      cancelToken: cancelToken,
+      filterType: event.filterType,
+    );
     result.fold(
       (failure) {
+        print('DashboardBloc: Failed to load expenses: ${failure.errorMessage}');
         safeEmit(GetAllExpensesError(failure.errorMessage), emit);
       },
       (expenses) {
+        print('DashboardBloc: Successfully loaded ${expenses.length} expenses');
+        for (var expense in expenses) {
+          print('DashboardBloc: Expense - ${expense.category}: ${expense.amount} ${expense.currency} on ${expense.date}');
+        }
         safeEmit(
             GetAllExpensesSuccess(
               expensesList: expenses,
@@ -48,14 +57,17 @@ class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
 
   Future<void> _handleLoadDashboardSummary(
       LoadDashboardSummary event, Emitter<DashboardStates> emit) async {
+    print('DashboardBloc: Loading summary with filter: ${event.filterType}');
     safeEmit(DashboardSummaryLoading(), emit);
     final result =
         await getExpensesSummaryUseCase(filterType: event.filterType);
     result.fold(
       (failure) {
+        print('DashboardBloc: Failed to load summary: ${failure.errorMessage}');
         safeEmit(DashboardSummaryError(failure.errorMessage), emit);
       },
       (summary) {
+        print('DashboardBloc: Summary loaded - Balance: ${summary['totalBalance']}, Income: ${summary['totalIncome']}, Expenses: ${summary['totalExpenses']}');
         safeEmit(
             DashboardSummaryLoaded(
               totalBalance: summary['totalBalance'] ?? 0.0,
@@ -70,15 +82,15 @@ class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
 
   Future<void> _handleRefreshExpenses(
       RefreshAllExpensesEvents event, Emitter<DashboardStates> emit) async {
-    // Refresh both expenses and summary
-    add(GetAllExpensesEvents(filterType: event.filterType));
-    add(LoadDashboardSummary(filterType: event.filterType));
+    print('DashboardBloc: Refreshing expenses with filter: ${event.filterType}');
+    // Instead of calling add(), we'll handle this in the UI
+    // The UI should call both events separately
   }
 
   Future<void> _handleApplyFilter(
       ApplyFilter event, Emitter<DashboardStates> emit) async {
-    // Apply filter and reload data
-    add(GetAllExpensesEvents(filterType: event.filterType));
-    add(LoadDashboardSummary(filterType: event.filterType));
+    print('DashboardBloc: Applying filter: ${event.filterType}');
+    // Instead of calling add(), we'll handle this in the UI
+    // The UI should call both events separately
   }
 }

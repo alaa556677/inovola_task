@@ -1,10 +1,13 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../../core/style/colors.dart';
 import '../../../../../core/widgets/image_card_widget.dart';
 import '../../../../../core/widgets/set_height_width.dart';
 import '../../../../../core/widgets/text_default.dart';
+import '../bloc/dashboard_bloc.dart';
+import '../bloc/dashboard_event.dart';
 
 class UserPicWidget extends StatefulWidget {
   const UserPicWidget({super.key});
@@ -75,6 +78,7 @@ class _UserPicWidgetState extends State<UserPicWidget> {
             onChanged: (value) {
               setState(() {
                 selectedDateFilter = value!;
+                context.read<DashboardBloc>().add(ApplyFilter(value));
               });
             },
           ),
