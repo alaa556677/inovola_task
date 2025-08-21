@@ -6,9 +6,9 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:inovola_task/core/widgets/set_height_width.dart';
 import 'package:inovola_task/core/widgets/text_default.dart';
-
 import '../../../../core/style/colors.dart';
 import '../widgets/category_widget.dart';
+import '../bloc/expense_bloc.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   const AddExpenseScreen({super.key});
@@ -19,7 +19,7 @@ class AddExpenseScreen extends StatefulWidget {
 
 class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
-  String selectedCategory = 'This Month';
+  String selectedCategory = 'Food & Dining';
   final _amountController = TextEditingController();
   final _notesController = TextEditingController();
 
@@ -35,32 +35,55 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   @override
   void dispose() {
+    _amountController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.whiteColor,
-      appBar: AppBar(
-        surfaceTintColor: Colors.transparent,
-        title: CustomTextWidget(
-          text: 'Add Expense',
-          fontSize: 22.sp,
-          fontColor: AppColors.blackColor,
-          fontWeight: FontWeight.w600,
-        ),
+    return BlocListener<ExpenseBloc, ExpenseState>(
+      listener: (context, state) {
+        if (state is ExpenseSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Expense saved successfully!'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+          // Return true to indicate successful save
+          Navigator.pop(context, true);
+        } else if (state is ExpenseError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.errorMessage),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      },
+      child: Scaffold(
         backgroundColor: AppColors.whiteColor,
-        centerTitle: true,
-      ),
-      body: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w, vertical: 8.h),
+        appBar: AppBar(
+          surfaceTintColor: Colors.transparent,
+          title: CustomTextWidget(
+            text: 'Add Expense',
+            fontSize: 22.sp,
+            fontColor: AppColors.blackColor,
+            fontWeight: FontWeight.w600,
+          ),
+          backgroundColor: AppColors.whiteColor,
+          centerTitle: true,
+        ),
+        body: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                  child: SingleChildScrollView(
+                padding: EdgeInsetsDirectional.symmetric(
+                    horizontal: 16.w, vertical: 8.h),
                 child: Column(
                   children: [
                     _buildCategorySection(),
@@ -76,16 +99,16 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     _buildCategoryGridView()
                   ],
                 ),
-              )
-            ),
-            setHeightSpace(8),
-            _buildSaveButton(),
-          ],
+              )),
+              setHeightSpace(8),
+              _buildSaveButton(),
+            ],
+          ),
         ),
       ),
     );
   }
-////////////////////////////////////////////////////////////////////////////////
+
   Widget _buildCategorySection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,50 +120,46 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           fontColor: AppColors.textPrimary,
         ),
         setHeightSpace(8),
-        DropdownButtonFormField2(
-          value: selectedCategory,
-          isExpanded: true,
-          dropdownStyleData: DropdownStyleData(
-              offset: const Offset(0, -5),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: AppColors.background,
-              ),
-              padding: EdgeInsets.zero
-          ),
+        DropdownButtonFormField2<String>(
           decoration: InputDecoration(
-              contentPadding: EdgeInsets.symmetric(horizontal: 2.w),
-              constraints: BoxConstraints(maxHeight: 48.h),
-              filled: true,
-              fillColor: AppColors.background,
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.r),
-              borderSide: const BorderSide(color: Colors.transparent, width: .5)
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.r),
-              borderSide: const BorderSide(color: Colors.transparent, width: .5),
-            ),
+            contentPadding:
+                EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
           ),
+          value: selectedCategory,
           items: [
-            'This Month',
-            'Last 7 Days',
-            'Last 30 Days',
-            'Custom Range',
-          ].map((item) => DropdownMenuItem<String>(
-            value: item,
-            child: CustomTextWidget(text: item, fontSize: 14.sp, textOverflow: TextOverflow.ellipsis,),
-          )).toList(),
-          onChanged: (value) {
+            'Food & Dining',
+            'Transportation',
+            'Shopping',
+            'Entertainment',
+            'Healthcare',
+            'Utilities',
+            'Housing',
+            'Other'
+          ].map((String value) {
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Text(value),
+            );
+          }).toList(),
+          onChanged: (String? newValue) {
             setState(() {
-              selectedCategory = value!;
+              selectedCategory = newValue!;
             });
+          },
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please select a category';
+            }
+            return null;
           },
         ),
       ],
     );
   }
-////////////////////////////////////////////////////////////////////////////////
+
   Widget _buildAmountSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,44 +171,34 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           fontColor: AppColors.textPrimary,
         ),
         setHeightSpace(8),
-        SizedBox(
-          height: 48.h,
-          child: TextFormField(
-            controller: _amountController,
-            keyboardType: TextInputType.number,
-            style: TextStyle(fontSize: 14.sp,),
-            decoration: InputDecoration(
-              hintText: '0.00',
-              hintStyle: TextStyle(fontSize: 14.sp,),
-              prefixIcon: Icon(Icons.attach_money, size: 20.r,),
-              filled: true,
-              fillColor: AppColors.background,
-              contentPadding: EdgeInsetsDirectional.only(bottom: 20.h),
-              enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                  borderSide: const BorderSide(color: Colors.transparent, width: .5)
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: const BorderSide(color: Colors.transparent, width: .5),
-              ),
+        TextFormField(
+          controller: _amountController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter an amount';
-              }
-              final amount = double.tryParse(value);
-              if (amount == null || amount <= 0) {
-                return 'Please enter a valid amount greater than 0';
-              }
-              return null;
-            },
+            contentPadding:
+                EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            hintText: '0.00',
           ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please enter an amount';
+            }
+            if (double.tryParse(value) == null) {
+              return 'Please enter a valid amount';
+            }
+            if (double.parse(value) <= 0) {
+              return 'Amount must be greater than 0';
+            }
+            return null;
+          },
         ),
       ],
     );
   }
-////////////////////////////////////////////////////////////////////////////////
+
   Widget _buildDateSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -204,20 +213,19 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         InkWell(
           onTap: _selectDate,
           child: Container(
-            height: 48.h,
-            padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade400),
               borderRadius: BorderRadius.circular(12),
-              color: AppColors.background
             ),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                CustomTextWidget(
-                  text: '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                  fontSize: 14.sp,
+                Text(
+                  '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                  style: TextStyle(fontSize: 16.sp),
                 ),
-                const Spacer(),
-                Icon(Icons.date_range_outlined, size: 22.r,),
+                const Icon(Icons.calendar_today),
               ],
             ),
           ),
@@ -225,7 +233,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       ],
     );
   }
-////////////////////////////////////////////////////////////////////////////////
+
   Widget _buildCurrencySection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,50 +245,42 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           fontColor: AppColors.textPrimary,
         ),
         setHeightSpace(8),
-        DropdownButtonFormField2(
-          value: selectedCategory,
-          isExpanded: true,
-          dropdownStyleData: DropdownStyleData(
-              offset: const Offset(0, -5),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: AppColors.background,
-              ),
-              padding: EdgeInsets.zero
-          ),
+        DropdownButtonFormField2<String>(
           decoration: InputDecoration(
-            contentPadding: EdgeInsets.symmetric(horizontal: 2.w),
-            constraints: BoxConstraints(maxHeight: 48.h),
-            filled: true,
-            fillColor: AppColors.background,
-            enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-                borderSide: const BorderSide(color: Colors.transparent, width: .5)
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.r),
-              borderSide: const BorderSide(color: Colors.transparent, width: .5),
-            ),
+            contentPadding:
+                EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
           ),
+          value: _selectedCurrency,
           items: [
-            'This Month',
-            'Last 7 Days',
-            'Last 30 Days',
-            'Custom Range',
-          ].map((item) => DropdownMenuItem<String>(
-            value: item,
-            child: CustomTextWidget(text: item, fontSize: 14.sp, textOverflow: TextOverflow.ellipsis,),
-          )).toList(),
-          onChanged: (value) {
+            'USD',
+            'EUR',
+            'GBP',
+            'JPY',
+            'CAD',
+            'AUD',
+            'CHF',
+            'CNY',
+            'INR',
+            'BRL'
+          ].map((String value) {
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Text(value),
+            );
+          }).toList(),
+          onChanged: (String? newValue) {
             setState(() {
-              selectedCategory = value!;
+              _selectedCurrency = newValue!;
             });
           },
         ),
       ],
     );
   }
-////////////////////////////////////////////////////////////////////////////////
+
   Widget _buildReceiptSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -295,24 +295,20 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         InkWell(
           onTap: _pickImage,
           child: Container(
-            height: 48.h,
-            padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
             decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: AppColors.background
+              border: Border.all(color: Colors.grey.shade400),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               children: [
-                Icon(
-                  _receiptPath != null ? Icons.image : Icons.add_a_photo,
-                  color: AppColors.primary,
-                  size: 22.r,
-                ),
-                setWidthSpace(12),
-                CustomTextWidget(
-                  text: _receiptPath != null ? 'Receipt added' : 'Add receipt photo',
-                  fontSize: 14.sp,
-                  fontColor: AppColors.textPrimary,
+                Icon(Icons.attach_file, color: AppColors.primary),
+                setWidthSpace(8),
+                Text(
+                  _receiptPath != null
+                      ? 'Receipt selected'
+                      : 'Select receipt image',
+                  style: TextStyle(fontSize: 16.sp),
                 ),
               ],
             ),
@@ -321,71 +317,86 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       ],
     );
   }
-////////////////////////////////////////////////////////////////////////////////
-  Widget _buildCategoryGridView(){
-    int length = 6;
+
+  Widget _buildCategoryGridView() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         CustomTextWidget(
-          text: 'Categories',
+          text: 'Quick Categories',
           fontSize: 16.sp,
           fontWeight: FontWeight.w600,
           fontColor: AppColors.textPrimary,
         ),
-        setHeightSpace(10),
-        MasonryGridView.extent(
-          maxCrossAxisExtent: 80.w,
-          mainAxisSpacing: 12.w,
-          crossAxisSpacing: 12.h,
-          physics: const BouncingScrollPhysics(),
-          shrinkWrap: true,
-          itemCount: length + 1,
-          itemBuilder: (context, index){
-            if(index == length){
-              return const AddCategoryWidget();
-            }else{
-              return const CategoryWidget();
-            }
-          },
+        setHeightSpace(8),
+        StaggeredGrid.count(
+          crossAxisCount: 4,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          children: [
+            'Food',
+            'Transport',
+            'Shopping',
+            'Entertainment',
+            'Health',
+            'Bills',
+            'Home',
+            'Other'
+          ]
+              .map((category) => CategoryWidget(
+                    category: category,
+                    onTap: () {
+                      setState(() {
+                        selectedCategory = category;
+                      });
+                    },
+                  ))
+              .toList(),
         ),
       ],
     );
   }
-////////////////////////////////////////////////////////////////////////////////
+
   Widget _buildSaveButton() {
-    return Padding(
-      padding: EdgeInsetsDirectional.symmetric(horizontal: 16.w, vertical: 8.h),
-      child: SizedBox(
-        width: double.infinity,
-        height: 48.h,
-        child: ElevatedButton(
-          onPressed: _isLoading ? null : _saveExpense,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+    return BlocBuilder<ExpenseBloc, ExpenseState>(
+      builder: (context, state) {
+        final isLoading = state is ExpenseLoading;
+
+        return Padding(
+          padding: EdgeInsets.all(16.w),
+          child: SizedBox(
+            width: double.infinity,
+            height: 48.h,
+            child: ElevatedButton(
+              onPressed: isLoading ? null : _saveExpense,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: isLoading
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : CustomTextWidget(
+                      text: 'Save',
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w400,
+                      fontColor: AppColors.whiteColor,
+                    ),
             ),
           ),
-          child: _isLoading
-              ? const SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-            ),
-          ):CustomTextWidget(
-            text: 'Save',
-            fontSize: 16.sp,
-            fontWeight: FontWeight.w400,
-            fontColor: AppColors.whiteColor,
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
-////////////////////////////////////////////////////////////////////////////////
+
   Future<void> _selectDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -414,44 +425,16 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   void _saveExpense() {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    final amount = double.parse(_amountController.text);
 
-    try {
-      final amount = double.parse(_amountController.text);
-
-      // TODO: Convert amount to USD using currency service
-      final amountUSD = amount; // Placeholder conversion
-
-      // final expense = Expense(
-      //   id: DateTime.now().millisecondsSinceEpoch.toString(),
-      //   category: _selectedCategory,
-      //   amountOriginal: amount,
-      //   amountUSD: amountUSD,
-      //   currency: _selectedCurrency,
-      //   date: _selectedDate,
-      //   receiptPath: _receiptPath,
-      //   notes: _notesController.text.isEmpty ? null : _notesController.text,
-      //   createdAt: DateTime.now(),
-      //   updatedAt: DateTime.now(),
-      // );
-      //
-      // context.read<ExpenseBloc>().add(AddExpense(expense));
-
-      // Navigate back after successful save
-      Navigator.pop(context);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error saving expense: $e'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+    context.read<ExpenseBloc>().add(AddExpense(
+          category: selectedCategory,
+          amount: amount,
+          currency: _selectedCurrency,
+          date: _selectedDate,
+          receiptPath: _receiptPath,
+          notes: _notesController.text.isEmpty ? null : _notesController.text,
+          type: 'expense',
+        ));
   }
 }

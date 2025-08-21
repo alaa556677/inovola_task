@@ -1,14 +1,15 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import '../../../../core/failure/failure.dart';
-import '../entities/get_expenses_entity.dart';
-import '../repo/repo.dart';
+import '../entities/expense_entity.dart';
+import '../repo/expense_repo.dart';
 
 class GetExpenseUseCase {
-  final DashBoardRepo dashBoardRepo;
-  GetExpenseUseCase(this.dashBoardRepo);
+  final ExpenseRepository expenseRepository;
+  GetExpenseUseCase(this.expenseRepository);
 
-  Future <Either<Failure,List<GetExpenseEntity>>> call(CancelToken? cancelToken) async{
-    return await dashBoardRepo.getExpenses(cancelToken);
+  Future<Either<Failure, List<ExpenseEntity>>> call(
+      CancelToken? cancelToken) async {
+    return await expenseRepository.getAllExpenses();
   }
 }

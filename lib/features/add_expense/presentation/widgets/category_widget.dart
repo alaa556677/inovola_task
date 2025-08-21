@@ -6,22 +6,34 @@ import 'package:inovola_task/core/widgets/text_default.dart';
 import '../../../../core/style/colors.dart';
 
 class CategoryWidget extends StatelessWidget {
-  const CategoryWidget({super.key});
+  final String category;
+  final VoidCallback? onTap;
+
+  const CategoryWidget({
+    super.key,
+    required this.category,
+    this.onTap,
+  });
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const ImageCardWidget(),
-        setHeightSpace(4),
-        CustomTextWidget(
-          text: "Gas",
-          fontSize: 10.sp,
-          fontWeight: FontWeight.w300,
-        )
-      ],
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          const ImageCardWidget(),
+          setHeightSpace(4),
+          CustomTextWidget(
+            text: category,
+            fontSize: 10.sp,
+            fontWeight: FontWeight.w300,
+          )
+        ],
+      ),
     );
   }
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 class AddCategoryWidget extends StatelessWidget {
   const AddCategoryWidget({super.key});
@@ -33,11 +45,13 @@ class AddCategoryWidget extends StatelessWidget {
           width: 52.w,
           height: 52.h,
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.blue),
-            shape: BoxShape.circle
-          ),
+              border: Border.all(color: Colors.blue), shape: BoxShape.circle),
           alignment: Alignment.center,
-          child: Icon(Icons.add, color: Colors.blue, size: 22.r,),
+          child: Icon(
+            Icons.add,
+            color: Colors.blue,
+            size: 22.r,
+          ),
         ),
         setHeightSpace(4),
         CustomTextWidget(

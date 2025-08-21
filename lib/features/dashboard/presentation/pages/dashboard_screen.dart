@@ -26,84 +26,156 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<DashboardBloc>().add(GetAllExpensesEvents());
+    // Load both expenses and summary data
+    context
+        .read<DashboardBloc>()
+        .add(const GetAllExpensesEvents(filterType: 'This Month'));
+    context
+        .read<DashboardBloc>()
+        .add(const LoadDashboardSummary(filterType: 'This Month'));
+  }
+
+  Future<void> _refreshData() async {
+    // Refresh both expenses and summary data
+    context
+        .read<DashboardBloc>()
+        .add(const GetAllExpensesEvents(filterType: 'This Month'));
+    context
+        .read<DashboardBloc>()
+        .add(const LoadDashboardSummary(filterType: 'This Month'));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.whiteColor,
-      body: Stack(
-        children: [
-          const BackgroundColorWidget(),
-          Padding(
-            padding: EdgeInsetsDirectional.only(
-              start: 20.w,
-              end: 20.w,
-              top: MediaQuery.of(context).size.height * .05,
-              bottom: 0.h
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const UserPicWidget(),
-                setHeightSpace(30),
-                const SummaryExpenseWidget(),
-                setHeightSpace(30),
-                Row(
-                  children: [
-                    Expanded(
-                      child: CustomTextWidget(
-                        text: "Recent Expenses",
-                        fontSize: 14.sp,
+    return BlocListener<DashboardBloc, DashboardStates>(
+      listener: (context, state) {
+        // This will be called whenever the dashboard state changes
+        // We can add specific logic here if needed
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.whiteColor,
+        body: Stack(
+          children: [
+            const BackgroundColorWidget(),
+            Padding(
+              padding: EdgeInsetsDirectional.only(
+                  start: 20.w,
+                  end: 20.w,
+                  top: MediaQuery.of(context).size.height * .05,
+                  bottom: 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const UserPicWidget(),
+                  setHeightSpace(30),
+                  const SummaryExpenseWidget(),
+                  setHeightSpace(30),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: CustomTextWidget(
+                          text: "Recent Expenses",
+                          fontSize: 14.sp,
+                          fontColor: AppColors.blackColor,
+                        ),
+                      ),
+                      CustomTextWidget(
+                        text: "see all",
+                        fontSize: 12.sp,
                         fontColor: AppColors.blackColor,
                       ),
+                    ],
+                  ),
+                  setHeightSpace(6),
+                  Expanded(
+                    child: BlocBuilder<DashboardBloc, DashboardStates>(
+                      builder: (context, state) {
+                        return state is GetAllExpensesLoading
+                            ? const LoadingWidget()
+                            : state is GetAllExpensesSuccess
+                                ? RefreshIndicator(
+                                    onRefresh: _refreshData,
+                                    child: state.expensesList.isEmpty
+                                        ? const Center(
+                                            child: Text('No expenses found'),
+                                          )
+                                        : ListView.separated(
+                                            itemBuilder: (context, index) =>
+                                                ExpenseCardWidget(
+                                              getExpenseEntity:
+                                                  state.expensesList[index],
+                                            ),
+                                            itemCount:
+                                                state.expensesList.length,
+                                            separatorBuilder:
+                                                (context, index) =>
+                                                    setHeightSpace(10),
+                                          ),
+                                  )
+                                : const SizedBox();
+                      },
                     ),
-                    CustomTextWidget(
-                      text: "see all",
-                      fontSize: 12.sp,
-                      fontColor: AppColors.blackColor,
-                    ),
-                  ],
-                ),
-                setHeightSpace(6),
-                BlocBuilder<DashboardBloc, DashboardStates>(
-                  builder: (context, state){
-                    return state is GetAllExpensesLoading ? const Expanded(child: LoadingWidget()) : state is GetAllExpensesSuccess ? Expanded(
-                      child: ListView.separated(
-                        itemBuilder: (context, index) => ExpenseCardWidget(getExpenseEntity: state.expensesList[index],),
-                        itemCount: state.expensesList.length,
-                        separatorBuilder: (context, index) => setHeightSpace(10),
-                      )
-                    ) : const SizedBox();
-                  }
-                )
-              ],
+                  )
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        mini: true,
-        shape: const CircleBorder(),
-        onPressed: () {
-          Navigator.pushNamed(context, "/add-expense");
-        },
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.add, color: Colors.white, size: 24,),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        color: AppColors.whiteColor,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            SvgPicture.asset("assets/images/home.svg", width: 24.w, height: 24.h, color: Colors.blue,),
-            SvgPicture.asset("assets/images/bar.svg", width: 24.w, height: 24.h,),
-            const Visibility(visible: false, child: SizedBox()),
-            SvgPicture.asset("assets/images/money.svg", width: 24.w, height: 24.h,),
-            SvgPicture.asset("assets/images/user.svg", width: 24.w, height: 24.h,),
           ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          mini: true,
+          shape: const CircleBorder(),
+          onPressed: () async {
+            // Navigate to add expense and wait for result
+            final result = await Navigator.pushNamed(context, "/add-expense");
+
+            // If we returned from add expense, refresh the dashboard
+            if (result == true) {
+              // Refresh both expenses and summary data
+              context
+                  .read<DashboardBloc>()
+                  .add(const GetAllExpensesEvents(filterType: 'This Month'));
+              context
+                  .read<DashboardBloc>()
+                  .add(const LoadDashboardSummary(filterType: 'This Month'));
+            }
+          },
+          backgroundColor: Colors.blue,
+          child: const Icon(
+            Icons.add,
+            color: Colors.white,
+            size: 24,
+          ),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        bottomNavigationBar: BottomAppBar(
+          color: AppColors.whiteColor,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              SvgPicture.asset(
+                "assets/images/home.svg",
+                width: 24.w,
+                height: 24.h,
+                color: Colors.blue,
+              ),
+              SvgPicture.asset(
+                "assets/images/bar.svg",
+                width: 24.w,
+                height: 24.h,
+              ),
+              const Visibility(visible: false, child: SizedBox()),
+              SvgPicture.asset(
+                "assets/images/money.svg",
+                width: 24.w,
+                height: 24.h,
+              ),
+              SvgPicture.asset(
+                "assets/images/user.svg",
+                width: 24.w,
+                height: 24.h,
+              ),
+            ],
+          ),
         ),
       ),
     );

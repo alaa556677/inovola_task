@@ -1,45 +1,61 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import 'package:inovola_task/core/style/colors.dart';
 import '../../../../../core/widgets/image_card_widget.dart';
 import '../../../../../core/widgets/set_height_width.dart';
 import '../../../../../core/widgets/text_default.dart';
-import '../../domain/entities/get_expenses_entity.dart';
+import '../../domain/entities/expense_entity.dart';
 
 class ExpenseCardWidget extends StatelessWidget {
-  final GetExpenseEntity getExpenseEntity;
-  const ExpenseCardWidget ({super.key, required this.getExpenseEntity});
+  final ExpenseEntity getExpenseEntity;
+  const ExpenseCardWidget({super.key, required this.getExpenseEntity});
+
   @override
   Widget build(BuildContext context) {
+    final currencyFormatter = NumberFormat.currency(symbol: '\$');
+    final dateFormatter = DateFormat('MMM dd, yyyy');
+    final timeFormatter = DateFormat('hh:mm a');
+
     return Container(
       padding: EdgeInsetsDirectional.symmetric(horizontal: 10.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: AppColors.whiteColor,
-        border: Border.all(color: AppColors.blackColor.withOpacity(.04)),
-
-        borderRadius: BorderRadius.circular(12.r)
-      ),
+          color: AppColors.whiteColor,
+          border: Border.all(color: AppColors.blackColor.withOpacity(.04)),
+          borderRadius: BorderRadius.circular(12.r)),
       child: Row(
         children: [
-          const ImageCardWidget(),
+          getExpenseEntity.receiptPath != null
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(8.r),
+                  child: Image.asset(
+                    getExpenseEntity.receiptPath!,
+                    width: 50.w,
+                    height: 50.h,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const ImageCardWidget(),
+                  ),
+                )
+              : const ImageCardWidget(),
           setWidthSpace(12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CustomTextWidget(
-                  text: getExpenseEntity.title,
+                  text: getExpenseEntity.category,
                   fontSize: 14.sp,
                   fontColor: AppColors.blackColor,
-                  fontWeight:  FontWeight.w500,
+                  fontWeight: FontWeight.w500,
                 ),
                 SizedBox(height: 4.h),
                 CustomTextWidget(
-                  text: getExpenseEntity.body,
+                  text: getExpenseEntity.notes ?? 'No notes',
                   fontSize: 10.sp,
                   fontColor: AppColors.blackColor,
-                  fontWeight:  FontWeight.w300,
+                  fontWeight: FontWeight.w300,
                 ),
               ],
             ),
@@ -48,17 +64,21 @@ class ExpenseCardWidget extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               CustomTextWidget(
-                text: '-\$ 100',
+                text:
+                    '${getExpenseEntity.type == 'expense' ? '-' : '+'}${currencyFormatter.format(getExpenseEntity.amount)}',
                 fontSize: 14.sp,
-                fontColor: AppColors.blackColor,
-                fontWeight:  FontWeight.w500,
+                fontColor: getExpenseEntity.type == 'expense'
+                    ? AppColors.error
+                    : AppColors.success,
+                fontWeight: FontWeight.w500,
               ),
               SizedBox(height: 4.h),
               CustomTextWidget(
-                text: 'Today 12:00 PM',
+                text:
+                    '${dateFormatter.format(getExpenseEntity.date)} ${timeFormatter.format(getExpenseEntity.date)}',
                 fontSize: 10.sp,
                 fontColor: AppColors.blackColor,
-                fontWeight:  FontWeight.w300,
+                fontWeight: FontWeight.w300,
               ),
             ],
           )
