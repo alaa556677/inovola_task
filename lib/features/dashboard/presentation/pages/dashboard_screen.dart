@@ -216,57 +216,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final currentState = bloc.state;
 
     // Check if we have expenses data
-    if (currentState is GetAllExpensesSuccess) {
-      // Check if we also have summary data
-      if (currentState.expensesList.isNotEmpty) {
-        // Get summary data - we'll use default values if not available
-        double totalBalance = 0;
-        double totalIncome = 0;
-        double totalExpenses = 0;
+    if (bloc.expensesList.isNotEmpty) {
+      double totalBalance = 0;
+      double totalIncome = 0;
+      double totalExpenses = 0;
 
-        // Calculate basic summary from expenses if summary not loaded
-        for (final expense in currentState.expensesList) {
-          if (expense.type == 'income') {
-            totalIncome += expense.convertedAmount;
-          } else {
-            totalExpenses += expense.convertedAmount;
-          }
+      // Calculate basic summary from expenses if summary not loaded
+      for (final expense in bloc.expensesList) {
+        if (expense.type == 'income') {
+          totalIncome += expense.convertedAmount;
+        } else {
+          totalExpenses += expense.convertedAmount;
         }
-        totalBalance = totalIncome - totalExpenses;
+      }
+      totalBalance = totalIncome - totalExpenses;
 
-        showDialog(
-          context: context,
-          builder: (context) => ExportDialog(
-            expenses: currentState.expensesList,
-            filterType: currentState.currentFilter ?? 'All',
-            totalBalance: totalBalance,
-            totalIncome: totalIncome,
-            totalExpenses: totalExpenses,
+      showDialog(
+        context: context,
+        builder: (context) => ExportDialog(
+          expenses: bloc.expensesList,
+          filterType: bloc.filterType ?? 'All',
+          totalBalance: totalBalance,
+          totalIncome: totalIncome,
+          totalExpenses: totalExpenses,
+        ),
+      );
+    }else{
+      if (currentState is GetAllExpensesLoading) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please wait for expenses to load before exporting'),
+            backgroundColor: AppColors.warning,
           ),
         );
-      } else {
-        // No expenses to export
+      }else{
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('No expenses found to export'),
             backgroundColor: AppColors.warning,
           ),
         );
       }
-    } else if (currentState is GetAllExpensesLoading) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Please wait for expenses to load before exporting'),
-          backgroundColor: AppColors.warning,
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Please wait for expenses to load before exporting'),
-          backgroundColor: AppColors.error,
-        ),
-      );
     }
   }
 }

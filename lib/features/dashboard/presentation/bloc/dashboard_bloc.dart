@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:inovola_task/features/dashboard/presentation/bloc/dashboard_event.dart';
 import 'package:inovola_task/features/dashboard/presentation/bloc/dashboard_state.dart';
 import '../../../../core/services/cancel_token.dart';
+import '../../domain/entities/expense_entity.dart';
 import '../../domain/useCase/get_expense_useCase.dart';
 import '../../domain/useCase/get_expenses_summary_use_case.dart';
 
@@ -26,7 +27,9 @@ class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
       }
     });
   }
-
+////////////////////////////////////////////////////////////////////////////////
+  List<ExpenseEntity> expensesList = [];
+  String? filterType;
   Future<void> _handleGetAllExpenses(
       GetAllExpensesEvents event, Emitter<DashboardStates> emit) async {
     print('DashboardBloc: Loading expenses with filter: ${event.filterType}');
@@ -45,6 +48,8 @@ class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
         for (var expense in expenses) {
           print('DashboardBloc: Expense - ${expense.category}: ${expense.amount} ${expense.currency} on ${expense.date}');
         }
+        expensesList = expenses;
+        filterType = event.filterType ?? 'All';
         safeEmit(
             GetAllExpensesSuccess(
               expensesList: expenses,
