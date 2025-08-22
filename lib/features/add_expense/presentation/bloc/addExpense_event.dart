@@ -62,3 +62,18 @@ class ValidateForm extends ExpenseEvent {
   @override
   List<Object?> get props => [category, amount, currency, date];
 }
+////////////////////////////////////////////////////////////////////////////////
+class GetRatesEvent extends ExpenseEvent {}
+////////////////////////////////////////////////////////////////////////////////
+class ConvertToUSDEvent extends ExpenseEvent {
+  final double amount;
+  final String fromCurrency;
+  const ConvertToUSDEvent(this.amount, this.fromCurrency);
+}
+////////////////////////////////////////////////////////////////////////////////
+class ConvertFromUSDEvent extends ExpenseEvent {
+  final double amount;
+  final String toCurrency;
+  const ConvertFromUSDEvent(this.amount, this.toCurrency);
+}
+////////////////////////////////////////////////////////////////////////////////

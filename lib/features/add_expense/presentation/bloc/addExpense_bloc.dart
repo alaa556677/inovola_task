@@ -3,16 +3,25 @@ import '../../../../core/services/cancel_token.dart';
 import '../../../../core/services/currency_service.dart';
 import '../../domain/entities/expense_entity.dart';
 import '../../domain/useCase/add_expense_use_case.dart';
+import '../../domain/useCase/convertFromUSD_useCase.dart';
+import '../../domain/useCase/convertToUSD_useCase.dart';
+import '../../domain/useCase/getExchangeRate_useCase.dart';
 import 'addExpense_event.dart';
 import 'addExpense_state.dart';
 
-class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> with BlocCancelToken<ExpenseEvent, ExpenseState>{
+class AddExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> with BlocCancelToken<ExpenseEvent, ExpenseState>{
   final AddExpenseUseCase addExpenseUseCase;
-  final CurrencyService currencyService;
+  final ConvertFromUSDUseCase convertFromUSDUseCase;
+  final ConvertToUSDUseCase convertToUSDUseCase;
+  final GetExchangeRateUseCase getExchangeRateUseCase;
+  // final CurrencyService currencyService;
 
-  ExpenseBloc({
+  AddExpenseBloc({
     required this.addExpenseUseCase,
-    required this.currencyService,
+    required this.getExchangeRateUseCase,
+    required this.convertToUSDUseCase,
+    required this.convertFromUSDUseCase,
+    // required this.currencyService,
   }) : super(ExpenseInitial()) {
     on<ExpenseEvent>((event, emit) async {
       if (event is AddExpense) {
@@ -21,6 +30,9 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> with BlocCancelToken<
         await _handleValidateForm(event, emit);
       }
     });
+    on<GetRatesEvent>(_onGetRates);
+    on<ConvertToUSDEvent>(_onConvertToUSD);
+    on<ConvertFromUSDEvent>(_onConvertFromUSD);
   }
 ////////////////////////////////////////////////////////////////////////////////
   Future<void> _handleAddExpense(AddExpense event, emit) async {
@@ -28,7 +40,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> with BlocCancelToken<
     try {
       double convertedAmount = event.amount;
       if (event.currency != 'USD') {
-        convertedAmount = await currencyService.convertToUSD(event.amount, event.currency);
+        convertedAmount = await convertToUSDUseCase(event.amount, event.currency);
       }
       final expense = ExpenseEntity(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -54,7 +66,7 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> with BlocCancelToken<
       safeEmit(AddExpenseError(e.toString()), emit);
     }
   }
-
+////////////////////////////////////////////////////////////////////////////////
   Future<void> _handleValidateForm(ValidateForm event, emit) async {
     final Map<String, String> errors = {};
 
@@ -85,5 +97,35 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> with BlocCancelToken<
 
     final isValid = errors.isEmpty;
     emit(FormValidationState(isValid: isValid, errors: errors));
+  }
+////////////////////////////////////////////////////////////////////////////////
+  Future<void> _onGetRates(GetRatesEvent event, Emitter<ExpenseState> emit) async {
+    safeEmit(CurrencyLoading(), emit);
+    try {
+      final rates = await getExchangeRateUseCase();
+      safeEmit(CurrencyLoaded(rates), emit);
+    } catch (e) {
+      safeEmit(CurrencyError(e.toString()), emit);
+    }
+  }
+////////////////////////////////////////////////////////////////////////////////
+  Future<void> _onConvertToUSD(ConvertToUSDEvent event, Emitter<ExpenseState> emit) async {
+    safeEmit(CurrencyLoading(), emit);
+    try {
+      final result = await convertToUSDUseCase(event.amount, event.fromCurrency);
+      safeEmit(CurrencyConverted(result), emit);
+    } catch (e) {
+      safeEmit(CurrencyError(e.toString()), emit);
+    }
+  }
+////////////////////////////////////////////////////////////////////////////////
+  Future<void> _onConvertFromUSD(ConvertFromUSDEvent event, Emitter<ExpenseState> emit) async {
+    safeEmit(CurrencyLoading(), emit);
+    try {
+      final result = await convertFromUSDUseCase(event.amount, event.toCurrency);
+      safeEmit(CurrencyConverted(result), emit);
+    } catch (e) {
+      safeEmit(CurrencyError(e.toString()), emit);
+    }
   }
 }

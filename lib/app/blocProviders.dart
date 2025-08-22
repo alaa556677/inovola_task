@@ -9,8 +9,8 @@ class AppBlocProviders {
     BlocProvider<DashboardBloc>(
       create: (context) => locator<DashboardBloc>(),
     ),
-    BlocProvider<ExpenseBloc>(
-      create: (context) => locator<ExpenseBloc>(),
+    BlocProvider<AddExpenseBloc>(
+      create: (context) => locator<AddExpenseBloc>(),
     ),
     BlocProvider<PaginationBloc>(
       create: (context) => locator<PaginationBloc>(),

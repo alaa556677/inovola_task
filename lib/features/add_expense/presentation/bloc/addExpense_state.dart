@@ -34,3 +34,21 @@ class FormValidationState extends ExpenseState {
   @override
   List<Object?> get props => [isValid, errors];
 }
+////////////////////////////////////////////////////////////////////////////////
+class CurrencyLoading extends ExpenseState {}
+
+class CurrencyLoaded extends ExpenseState {
+  final Map<String, double> rates;
+  const CurrencyLoaded(this.rates);
+}
+
+class CurrencyConverted extends ExpenseState {
+  final double result;
+  const CurrencyConverted(this.result);
+}
+
+class CurrencyError extends ExpenseState {
+  final String message;
+  const CurrencyError(this.message);
+}
+////////////////////////////////////////////////////////////////////////////////

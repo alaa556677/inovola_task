@@ -43,7 +43,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ExpenseBloc, ExpenseState>(
+    return BlocListener<AddExpenseBloc, ExpenseState>(
       listener: (context, state) {
         if (state is AddExpenseSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -357,7 +357,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   }
 
   Widget _buildSaveButton() {
-    return BlocBuilder<ExpenseBloc, ExpenseState>(
+    return BlocBuilder<AddExpenseBloc, ExpenseState>(
       builder: (context, state) {
         final isLoading = state is AddExpenseLoading;
 
@@ -426,7 +426,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
     final amount = double.parse(_amountController.text);
 
-    context.read<ExpenseBloc>().add(AddExpense(
+    context.read<AddExpenseBloc>().add(AddExpense(
           category: selectedCategory,
           amount: amount,
           currency: _selectedCurrency,

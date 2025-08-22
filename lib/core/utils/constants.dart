@@ -1,0 +1,4 @@
+enum Constants {
+  cachedData,
+  cacheTimestampKey
+}
