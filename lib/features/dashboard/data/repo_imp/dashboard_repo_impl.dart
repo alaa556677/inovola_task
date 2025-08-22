@@ -44,24 +44,29 @@ class DashboardRepositoryImpl implements DashboardRepository {
       expenses.sort((a, b) => b.date.compareTo(a.date));
 
       // Apply pagination
-      if (page != null && limit != null) {
-        final startIndex = page * limit;
-        final endIndex = (startIndex + limit).clamp(0, expenses.length);
-        expenses = expenses.sublist(startIndex, endIndex);
+      if (page == null || page < 1) page = 1;
+
+      final startIndex = (page - 1) * limit!;
+      if (startIndex >= expenses.length) {
+        return Right([]);
       }
+
+      final endIndex = (startIndex + limit).clamp(0, expenses.length);
+      expenses = expenses.sublist(startIndex, endIndex);
 
       final entities = expenses.map((model) => model.toEntity()).toList();
       print('ExpenseRepository: Returning ${entities.length} expense entities');
       for (var entity in entities) {
         print('ExpenseRepository: Entity - ${entity.category}: ${entity.amount} ${entity.currency} on ${entity.date}');
       }
-      
+
       return Right(entities);
     } catch (e) {
       print('ExpenseRepository: Error getting expenses: $e');
       return Left(Failure('Failed to get expenses: ${e.toString()}'));
     }
   }
+
 ////////////////////////////////////////////////////////////////////////////////
   @override
   Future<Either<Failure, Map<String, double>>> getExpensesSummary({

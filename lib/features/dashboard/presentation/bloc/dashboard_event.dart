@@ -9,17 +9,14 @@ abstract class DashboardEvents extends Equatable {
 
 class GetAllExpensesEvents extends DashboardEvents {
   final String? filterType;
-  final int? page;
-  final int? limit;
-
+  final bool isLoadMore;
   const GetAllExpensesEvents({
     this.filterType,
-    this.page,
-    this.limit,
+    this.isLoadMore = false
   });
 
   @override
-  List<Object?> get props => [filterType, page, limit];
+  List<Object?> get props => [filterType, isLoadMore];
 }
 
 class LoadDashboardSummary extends DashboardEvents {
@@ -48,3 +45,5 @@ class ApplyFilter extends DashboardEvents {
   @override
   List<Object?> get props => [filterType];
 }
+
+

@@ -23,24 +23,25 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  final ScrollController _scrollController = ScrollController();
   @override
   void initState() {
     super.initState();
-    context
-        .read<DashboardBloc>()
-        .add(const GetAllExpensesEvents(filterType: 'This Month'));
-    context
-        .read<DashboardBloc>()
-        .add(const LoadDashboardSummary(filterType: 'This Month'));
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 200) {
+        Future.delayed(Duration(seconds: 2), (){
+          context.read<DashboardBloc>().add(const GetAllExpensesEvents(isLoadMore: true),);
+        });
+      }
+    });
+    context.read<DashboardBloc>().add(const GetAllExpensesEvents(filterType: 'This Month'));
+    context.read<DashboardBloc>().add(const LoadDashboardSummary(filterType: 'This Month'));
   }
 
   Future<void> _refreshData() async {
-    context
-        .read<DashboardBloc>()
-        .add(const GetAllExpensesEvents(filterType: 'This Month'));
-    context
-        .read<DashboardBloc>()
-        .add(const LoadDashboardSummary(filterType: 'This Month'));
+    context.read<DashboardBloc>().add(const GetAllExpensesEvents(filterType: 'This Month'));
+    context.read<DashboardBloc>().add(const LoadDashboardSummary(filterType: 'This Month'));
   }
 
   @override
@@ -100,54 +101,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             current is GetAllExpensesError;
                       },
                       builder: (context, state) {
-                        if (state is GetAllExpensesLoading) {
-                          return const LoadingWidget();
-                        } else if (state is GetAllExpensesSuccess) {
-                          return RefreshIndicator(
-                            onRefresh: _refreshData,
-                            child: state.expensesList.isEmpty
-                                ? Center(
-                                    child: CustomTextWidget(
-                                      text: 'No expenses found',
-                                      fontSize: 14.sp,
-                                    ),
-                                  )
-                                : ListView.separated(
-                                    itemBuilder: (context, index) {
-                                      final expense = state.expensesList[index];
-                                      return ExpenseCardWidget(
-                                        getExpenseEntity: expense,
-                                      );
-                                    },
-                                    itemCount: state.expensesList.length,
-                                    separatorBuilder: (context, index) =>
-                                        setHeightSpace(10),
-                                  ),
-                          );
-                        } else if (state is GetAllExpensesError) {
-                          return Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                CustomTextWidget(
-                                  text: 'Error: ${state.errorMessage}',
-                                  fontSize: 14.sp,
-                                ),
-                                ElevatedButton(
-                                  onPressed: _refreshData,
-                                  child: CustomTextWidget(
-                                    text: 'Retry',
-                                    fontSize: 12.sp,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        } else {
-                          // Show loading for other states
-                          return const LoadingWidget();
+                        if (state is GetAllExpensesLoading &&  context.read<DashboardBloc>().expensesList.isEmpty) {
+                          return const Center(child: CircularProgressIndicator());
                         }
+
+                        if (state is GetAllExpensesError) {
+                          return Center(child: Text("Error: ${state.errorMessage}"));
+                        }
+
+                        if (state is GetAllExpensesSuccess) {
+                          return ListView.separated(
+                            controller: _scrollController,
+                            separatorBuilder: (context, index) => setHeightSpace(12),
+                            itemCount: state.hasMore == true
+                                ? state.expensesList.length + 1
+                                : state.expensesList.length,
+                            itemBuilder: (context, index) {
+                              if (index < state.expensesList.length) {
+                                final expense = state.expensesList[index];
+                                return ExpenseCardWidget(getExpenseEntity: expense);
+                              } else {
+                                return const Padding(
+                                  padding: EdgeInsets.all(16),
+                                  child: Center(child: CircularProgressIndicator()),
+                                );
+                              }
+                            },
+                          );
+                        }
+
+                        return const SizedBox();
                       },
+
                     ),
                   )
                 ],

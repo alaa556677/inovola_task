@@ -31,33 +31,60 @@ class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
 ////////////////////////////////////////////////////////////////////////////////
   List<ExpenseEntity> expensesList = [];
   String? filterType;
-  Future<void> _handleGetAllExpenses(GetAllExpensesEvents event, Emitter<DashboardStates> emit) async {
-    debugPrint('DashboardBloc: Loading expenses with filter: ${event.filterType}');
-    safeEmit(GetAllExpensesLoading(), emit);
+  int currentPage = 1;
+  final int pageSize = 10;
+  bool hasMore = true;
+  bool isLoadingMore = false;
+
+  Future<void> _handleGetAllExpenses(GetAllExpensesEvents event, Emitter<DashboardStates> emit,) async {
+    if (event.isLoadMore) {
+      if (isLoadingMore || !hasMore) return; // منع تكرار اللود
+      isLoadingMore = true;
+    } else {
+      // بداية جديدة (reset)
+      currentPage = 0;
+      hasMore = true;
+      expensesList.clear();
+      safeEmit(GetAllExpensesLoading(), emit);
+    }
+
     final result = await getExpenseUseCase(
       cancelToken: cancelToken,
       filterType: event.filterType,
+      page: currentPage,
+      limit: pageSize,
     );
+
     result.fold(
-      (failure) {
+          (failure) {
         debugPrint('DashboardBloc: Failed to load expenses: ${failure.errorMessage}');
         safeEmit(GetAllExpensesError(failure.errorMessage), emit);
       },
-      (expenses) {
+          (expenses) {
         debugPrint('DashboardBloc: Successfully loaded ${expenses.length} expenses');
-        for (var expense in expenses) {
-          debugPrint('DashboardBloc: Expense - ${expense.category}: ${expense.amount} ${expense.currency} on ${expense.date}');
+
+        if (expenses.isEmpty) {
+          hasMore = false;
+        } else {
+          expensesList.addAll(expenses);
+          currentPage++;
         }
-        expensesList = expenses;
+
         filterType = event.filterType ?? 'All';
         safeEmit(
           GetAllExpensesSuccess(
-            expensesList: expenses,
-            currentFilter: event.filterType,
-          ),emit);
+            expensesList: List.from(expensesList),
+            currentFilter: filterType,
+            hasMore: hasMore,
+          ),
+          emit,
+        );
       },
     );
+
+    isLoadingMore = false;
   }
+
 ////////////////////////////////////////////////////////////////////////////////
   Future<void> _handleLoadDashboardSummary(LoadDashboardSummary event, Emitter<DashboardStates> emit) async {
     safeEmit(DashboardSummaryLoading(), emit);

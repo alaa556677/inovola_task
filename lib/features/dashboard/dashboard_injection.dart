@@ -4,7 +4,6 @@ import 'domain/repo/dashboard_repo.dart';
 import 'domain/useCase/get_AllExpense_useCase.dart';
 import 'domain/useCase/get_expenses_summary_use_case.dart';
 import 'presentation/bloc/dashboard_bloc.dart';
-import 'presentation/bloc/pagination_bloc.dart';
 
 final locator = GetIt.instance;
 
@@ -29,9 +28,5 @@ initDashboardInjection() {
       getExpenseUseCase: locator<GetExpenseUseCase>(),
       getExpensesSummaryUseCase: locator<GetExpensesSummaryUseCase>(),
     ),
-  );
-
-  locator.registerFactory<PaginationBloc>(
-    () => PaginationBloc(),
   );
 }
