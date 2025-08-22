@@ -25,7 +25,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
   Future<Either<Failure, List<ExpenseEntity>>> getAllExpenses({
     String? filterType,
     int? page,
-    int? limit,
+    int? pageSize
   }) async {
     try {
       await _initBox();
@@ -44,9 +44,9 @@ class DashboardRepositoryImpl implements DashboardRepository {
       expenses.sort((a, b) => b.date.compareTo(a.date));
 
       // Apply pagination
-      if (page != null && limit != null) {
-        final startIndex = page * limit;
-        final endIndex = (startIndex + limit).clamp(0, expenses.length);
+      if (page != null && pageSize != null) {
+        final startIndex = page * pageSize;
+        final endIndex = (startIndex + pageSize).clamp(0, expenses.length);
         expenses = expenses.sublist(startIndex, endIndex);
       }
 

@@ -7,7 +7,7 @@ abstract class DashboardRepository {
   Future<Either<Failure, List<ExpenseEntity>>> getAllExpenses({
     String? filterType,
     int? page,
-    int? limit,
+    int? pageSize
   });
 
   /// Add a new expense

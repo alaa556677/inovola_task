@@ -23,24 +23,44 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  final ScrollController _scrollController = ScrollController();
+  int currentPage = 0;
+  final int pageSize = 10;
+
   @override
   void initState() {
     super.initState();
-    context
-        .read<DashboardBloc>()
-        .add(const GetAllExpensesEvents(filterType: 'This Month'));
-    context
-        .read<DashboardBloc>()
-        .add(const LoadDashboardSummary(filterType: 'This Month'));
+    context.read<DashboardBloc>().add(GetAllExpensesEvents(page: currentPage, pageSize: pageSize, filterType: 'This Month'));
+    context.read<DashboardBloc>().add(const LoadDashboardSummary(filterType: 'This Month'));
+    _scrollController.addListener(_onScroll);
   }
 
   Future<void> _refreshData() async {
-    context
-        .read<DashboardBloc>()
-        .add(const GetAllExpensesEvents(filterType: 'This Month'));
-    context
-        .read<DashboardBloc>()
-        .add(const LoadDashboardSummary(filterType: 'This Month'));
+    context.read<DashboardBloc>().add(GetAllExpensesEvents(page: currentPage, pageSize: pageSize, filterType: 'This Month'));
+    context.read<DashboardBloc>().add(const LoadDashboardSummary(filterType: 'This Month'));
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 100) {
+      final state = context.read<DashboardBloc>().state;
+      if (state is GetAllExpensesSuccess && state.hasMore) {
+        currentPage++;
+        context.read<DashboardBloc>().add(
+          GetAllExpensesEvents(
+            page: currentPage,
+            pageSize: pageSize,
+            filterType: state.currentFilter,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -100,29 +120,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             current is GetAllExpensesError;
                       },
                       builder: (context, state) {
-                        if (state is GetAllExpensesLoading) {
+                        if (state is GetAllExpensesLoading && currentPage == 1) {
                           return const LoadingWidget();
                         } else if (state is GetAllExpensesSuccess) {
                           return RefreshIndicator(
                             onRefresh: _refreshData,
-                            child: state.expensesList.isEmpty
-                                ? Center(
-                                    child: CustomTextWidget(
-                                      text: 'No expenses found',
-                                      fontSize: 14.sp,
-                                    ),
-                                  )
-                                : ListView.separated(
-                                    itemBuilder: (context, index) {
-                                      final expense = state.expensesList[index];
-                                      return ExpenseCardWidget(
-                                        getExpenseEntity: expense,
-                                      );
-                                    },
-                                    itemCount: state.expensesList.length,
-                                    separatorBuilder: (context, index) =>
-                                        setHeightSpace(10),
-                                  ),
+                            child: state.expensesList.isEmpty ? Center(
+                                child: CustomTextWidget(
+                                  text: 'No expenses found',
+                                  fontSize: 14.sp,
+                                ),
+                              ):ListView.separated(
+                                controller: _scrollController,
+                                itemBuilder: (context, index) {
+                                  if (index < state.expensesList.length) {
+                                    final expense = state.expensesList[index];
+                                    return ExpenseCardWidget(
+                                      getExpenseEntity: expense,
+                                    );
+                                  } else {
+                                    return const Padding(
+                                      padding: EdgeInsets.all(8.0),
+                                      child: Center(child: CircularProgressIndicator()),
+                                    );
+                                  }
+                                },
+                                itemCount: state.expensesList.length + (state.hasMore ? 1 : 0),
+                                separatorBuilder: (context, index) =>
+                                    setHeightSpace(10),
+                              ),
                           );
                         } else if (state is GetAllExpensesError) {
                           return Center(
@@ -160,12 +186,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           onPressed: () async {
             final result = await Navigator.pushNamed(context, "/add-expense");
             if (result == true) {
-              context
-                  .read<DashboardBloc>()
-                  .add(const GetAllExpensesEvents(filterType: 'This Month'));
-              context
-                  .read<DashboardBloc>()
-                  .add(const LoadDashboardSummary(filterType: 'This Month'));
+              context.read<DashboardBloc>().add(GetAllExpensesEvents(page: currentPage, pageSize: pageSize, filterType: 'This Month'));
+              context.read<DashboardBloc>().add(const LoadDashboardSummary(filterType: 'This Month'));
             }
           },
           backgroundColor: Colors.blue,

@@ -18,7 +18,7 @@ class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
   }) : super(DashBoardInitial()) {
     on<DashboardEvents>((event, emit) async {
       if (event is GetAllExpensesEvents) {
-        await _handleGetAllExpenses(event, emit);
+        await _handleGetExpensesPage(event, emit);
       } else if (event is LoadDashboardSummary) {
         await _handleLoadDashboardSummary(event, emit);
       } else if (event is RefreshAllExpensesEvents) {
@@ -31,33 +31,54 @@ class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
 ////////////////////////////////////////////////////////////////////////////////
   List<ExpenseEntity> expensesList = [];
   String? filterType;
-  Future<void> _handleGetAllExpenses(GetAllExpensesEvents event, Emitter<DashboardStates> emit) async {
-    debugPrint('DashboardBloc: Loading expenses with filter: ${event.filterType}');
-    safeEmit(GetAllExpensesLoading(), emit);
+  Future<void> _handleGetExpensesPage(GetAllExpensesEvents event, Emitter<DashboardStates> emit) async {
+    debugPrint(
+        'DashboardBloc: Loading page ${event.page} with size ${event.pageSize}, filter: ${event.filterType}');
+    if (event.page == 1) {
+      safeEmit(GetAllExpensesLoading(), emit);
+    }
+
     final result = await getExpenseUseCase(
       cancelToken: cancelToken,
       filterType: event.filterType,
+      page: event.page,
+      pageSize: event.pageSize,
     );
+
     result.fold(
-      (failure) {
-        debugPrint('DashboardBloc: Failed to load expenses: ${failure.errorMessage}');
+          (failure) {
+        debugPrint(
+            'DashboardBloc: Failed to load expenses: ${failure.errorMessage}');
         safeEmit(GetAllExpensesError(failure.errorMessage), emit);
       },
-      (expenses) {
-        debugPrint('DashboardBloc: Successfully loaded ${expenses.length} expenses');
+          (expenses) {
+        debugPrint(
+            'DashboardBloc: Successfully loaded ${expenses.length} expenses');
         for (var expense in expenses) {
-          debugPrint('DashboardBloc: Expense - ${expense.category}: ${expense.amount} ${expense.currency} on ${expense.date}');
+          debugPrint(
+              'DashboardBloc: Expense - ${expense.category}: ${expense.amount} ${expense.currency} on ${expense.date}');
         }
-        expensesList = expenses;
+
+        if (event.page == 1) {
+          expensesList = expenses;
+        } else {
+          expensesList.addAll(expenses);
+        }
+
         filterType = event.filterType ?? 'All';
+
         safeEmit(
           GetAllExpensesSuccess(
-            expensesList: expenses,
-            currentFilter: event.filterType,
-          ),emit);
+            expensesList: expensesList,
+            hasMore: expenses.length == event.pageSize, // لو رجع أقل من pageSize يبقى خلصت
+            currentFilter: filterType,
+          ),
+          emit,
+        );
       },
     );
   }
+
 ////////////////////////////////////////////////////////////////////////////////
   Future<void> _handleLoadDashboardSummary(LoadDashboardSummary event, Emitter<DashboardStates> emit) async {
     safeEmit(DashboardSummaryLoading(), emit);
@@ -85,4 +106,5 @@ class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
   Future<void> _handleApplyFilter(ApplyFilter event, Emitter<DashboardStates> emit) async {
     debugPrint('DashboardBloc: Applying filter: ${event.filterType}');
   }
+////////////////////////////////////////////////////////////////////////////////
 }
