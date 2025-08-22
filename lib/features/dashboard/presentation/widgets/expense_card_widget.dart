@@ -6,7 +6,7 @@ import 'package:inovola_task/core/style/colors.dart';
 import '../../../../../core/widgets/image_card_widget.dart';
 import '../../../../../core/widgets/set_height_width.dart';
 import '../../../../../core/widgets/text_default.dart';
-import '../../domain/entities/expense_entity.dart';
+import '../../../add_expense/domain/entities/expense_entity.dart';
 import 'dart:io';
 
 class ExpenseCardWidget extends StatelessWidget {

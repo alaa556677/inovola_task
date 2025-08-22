@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
-import '../../domain/entities/expense_entity.dart';
+
+import '../../../add_expense/domain/entities/expense_entity.dart';
 
 // Events
 abstract class PaginationEvent extends Equatable {

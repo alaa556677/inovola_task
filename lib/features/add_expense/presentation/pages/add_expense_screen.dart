@@ -7,8 +7,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:inovola_task/core/widgets/set_height_width.dart';
 import 'package:inovola_task/core/widgets/text_default.dart';
 import '../../../../core/style/colors.dart';
+import '../bloc/addExpense_event.dart';
+import '../bloc/addExpense_state.dart';
 import '../widgets/category_widget.dart';
-import '../bloc/expense_bloc.dart';
+import '../bloc/addExpense_bloc.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   const AddExpenseScreen({super.key});
@@ -26,7 +28,6 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   String _selectedCurrency = 'USD';
   DateTime _selectedDate = DateTime.now();
   String? _receiptPath;
-  bool _isLoading = false;
 
   @override
   void initState() {
@@ -44,16 +45,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   Widget build(BuildContext context) {
     return BlocListener<ExpenseBloc, ExpenseState>(
       listener: (context, state) {
-        if (state is ExpenseSuccess) {
+        if (state is AddExpenseSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text('Expense saved successfully!'),
               backgroundColor: AppColors.success,
             ),
           );
-          // Return true to indicate successful save
           Navigator.pop(context, true);
-        } else if (state is ExpenseError) {
+        } else if (state is AddExpenseError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.errorMessage),
@@ -359,7 +359,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   Widget _buildSaveButton() {
     return BlocBuilder<ExpenseBloc, ExpenseState>(
       builder: (context, state) {
-        final isLoading = state is ExpenseLoading;
+        final isLoading = state is AddExpenseLoading;
 
         return Padding(
           padding: EdgeInsets.all(16.w),

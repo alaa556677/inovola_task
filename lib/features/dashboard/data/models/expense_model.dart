@@ -1,5 +1,6 @@
 import 'package:hive/hive.dart';
-import '../../domain/entities/expense_entity.dart';
+
+import '../../../add_expense/domain/entities/expense_entity.dart';
 
 part 'expense_model.g.dart';
 

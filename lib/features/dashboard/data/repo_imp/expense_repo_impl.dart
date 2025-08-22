@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:hive/hive.dart';
 import '../../../../core/failure/failure.dart';
-import '../../domain/entities/expense_entity.dart';
+import '../../../add_expense/domain/entities/expense_entity.dart';
 import '../../domain/repo/expense_repo.dart';
 import '../models/expense_model.dart';
 

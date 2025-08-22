@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/failure/failure.dart';
+import '../../../dashboard/domain/repo/expense_repo.dart';
 import '../entities/expense_entity.dart';
-import '../repo/expense_repo.dart';
 
 class AddExpenseUseCase {
   final ExpenseRepository expenseRepository;

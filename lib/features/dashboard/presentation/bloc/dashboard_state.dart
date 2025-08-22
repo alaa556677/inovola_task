@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../../domain/entities/expense_entity.dart';
+import '../../../add_expense/domain/entities/expense_entity.dart';
 
 abstract class DashboardStates extends Equatable {
   const DashboardStates();

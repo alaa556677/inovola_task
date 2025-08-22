@@ -3,11 +3,10 @@ import '../../core/services/dio.dart';
 import '../../core/services/currency_service.dart';
 import 'data/repo_imp/expense_repo_impl.dart';
 import 'domain/repo/expense_repo.dart';
-import 'domain/useCase/get_expense_useCase.dart';
-import 'domain/useCase/add_expense_use_case.dart';
+import 'domain/useCase/get_AllExpense_useCase.dart';
 import 'domain/useCase/get_expenses_summary_use_case.dart';
 import 'presentation/bloc/dashboard_bloc.dart';
-import '../add_expense/presentation/bloc/expense_bloc.dart';
+import '../add_expense/presentation/bloc/addExpense_bloc.dart';
 import 'presentation/bloc/pagination_bloc.dart';
 
 final locator = GetIt.instance;
@@ -28,9 +27,7 @@ initDashboardInjection() {
     () => GetExpenseUseCase(locator<ExpenseRepository>()),
   );
 
-  locator.registerLazySingleton<AddExpenseUseCase>(
-    () => AddExpenseUseCase(locator<ExpenseRepository>()),
-  );
+
 
   locator.registerLazySingleton<GetExpensesSummaryUseCase>(
     () => GetExpensesSummaryUseCase(locator<ExpenseRepository>()),
@@ -44,12 +41,7 @@ initDashboardInjection() {
     ),
   );
 
-  locator.registerFactory<ExpenseBloc>(
-    () => ExpenseBloc(
-      addExpenseUseCase: locator<AddExpenseUseCase>(),
-      currencyService: locator<CurrencyService>(),
-    ),
-  );
+
 
   locator.registerFactory<PaginationBloc>(
     () => PaginationBloc(),

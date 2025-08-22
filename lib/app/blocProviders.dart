@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../features/dashboard/presentation/bloc/dashboard_bloc.dart';
-import '../features/add_expense/presentation/bloc/expense_bloc.dart';
+import '../features/add_expense/presentation/bloc/addExpense_bloc.dart';
 import '../features/dashboard/presentation/bloc/pagination_bloc.dart';
 import '../locator.dart';
 

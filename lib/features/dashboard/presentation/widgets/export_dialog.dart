@@ -4,8 +4,9 @@ import 'package:inovola_task/core/services/export_service.dart';
 import 'package:inovola_task/core/widgets/text_default.dart';
 import 'package:inovola_task/core/widgets/set_height_width.dart';
 import 'package:inovola_task/core/style/colors.dart';
-import 'package:inovola_task/features/dashboard/domain/entities/expense_entity.dart';
 import 'package:open_file/open_file.dart';
+
+import '../../../add_expense/domain/entities/expense_entity.dart';
 
 class ExportDialog extends StatefulWidget {
   final List<ExpenseEntity> expenses;

@@ -2,8 +2,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:inovola_task/features/dashboard/presentation/bloc/dashboard_event.dart';
 import 'package:inovola_task/features/dashboard/presentation/bloc/dashboard_state.dart';
 import '../../../../core/services/cancel_token.dart';
-import '../../domain/entities/expense_entity.dart';
-import '../../domain/useCase/get_expense_useCase.dart';
+import '../../../add_expense/domain/entities/expense_entity.dart';
+import '../../domain/useCase/get_AllExpense_useCase.dart';
 import '../../domain/useCase/get_expenses_summary_use_case.dart';
 
 class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
