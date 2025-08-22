@@ -6,7 +6,6 @@ import 'package:inovola_task/core/widgets/set_height_width.dart';
 import 'package:inovola_task/core/widgets/text_default.dart';
 import 'package:inovola_task/features/dashboard/presentation/bloc/dashboard_state.dart';
 import '../../../../core/style/colors.dart';
-import '../../../../core/widgets/bodyForAllStates.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../bloc/dashboard_bloc.dart';
 import '../bloc/dashboard_event.dart';
@@ -66,6 +65,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           fontColor: AppColors.blackColor,
                         ),
                       ),
+                      InkWell(
+                        onTap: (){},
+                        child: CustomTextWidget(
+                          text: "export",
+                          fontSize: 12.sp,
+                          fontColor: AppColors.blackColor,
+                        ),
+                      ),
+                      setWidthSpace(18),
                       CustomTextWidget(
                         text: "see all",
                         fontSize: 12.sp,
