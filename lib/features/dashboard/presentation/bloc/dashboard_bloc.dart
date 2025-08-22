@@ -25,6 +25,8 @@ class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
         await _handleRefreshExpenses(event, emit);
       } else if (event is ApplyFilter) {
         await _handleApplyFilter(event, emit);
+      } else if (event is AddSingleExpense) {
+        await _handleAddSingleExpense(event, emit);
       }
     });
   }
@@ -36,15 +38,29 @@ class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
   bool hasMore = true;
   bool isLoadingMore = false;
 
-  Future<void> _handleGetAllExpenses(GetAllExpensesEvents event, Emitter<DashboardStates> emit,) async {
+  // Store summary data to preserve it across state changes
+  double? _lastTotalBalance;
+  double? _lastTotalIncome;
+  double? _lastTotalExpenses;
+
+  // Getters for stored summary data
+  double get lastTotalBalance => _lastTotalBalance ?? 0.0;
+  double get lastTotalIncome => _lastTotalIncome ?? 0.0;
+  double get lastTotalExpenses => _lastTotalExpenses ?? 0.0;
+
+  Future<void> _handleGetAllExpenses(
+      GetAllExpensesEvents event, Emitter<DashboardStates> emit) async {
     if (event.isLoadMore) {
-      if (isLoadingMore || !hasMore) return; // منع تكرار اللود
+      if (isLoadingMore || !hasMore) return; // Prevent duplicate loading
       isLoadingMore = true;
+      safeEmit(GetAllExpensesLoading(), emit);
     } else {
-      // بداية جديدة (reset)
-      currentPage = 0;
-      hasMore = true;
-      expensesList.clear();
+      // Only reset for new filter, preserve list for refresh
+      if (filterType != event.filterType) {
+        currentPage = 1;
+        hasMore = true;
+        expensesList.clear();
+      }
       safeEmit(GetAllExpensesLoading(), emit);
     }
 
@@ -56,21 +72,39 @@ class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
     );
 
     result.fold(
-          (failure) {
-        debugPrint('DashboardBloc: Failed to load expenses: ${failure.errorMessage}');
+      (failure) {
+        debugPrint(
+            'DashboardBloc: Failed to load expenses: ${failure.errorMessage}');
         safeEmit(GetAllExpensesError(failure.errorMessage), emit);
       },
-          (expenses) {
-        debugPrint('DashboardBloc: Successfully loaded ${expenses.length} expenses');
+      (expenses) {
+        debugPrint(
+            'DashboardBloc: Successfully loaded ${expenses.length} expenses');
+
+        if (event.isLoadMore) {
+          // Add to existing list for pagination
+          expensesList.addAll(expenses);
+        } else {
+          // Replace list for new filter or refresh
+          expensesList = List.from(expenses);
+        }
 
         if (expenses.isEmpty) {
           hasMore = false;
         } else {
-          expensesList.addAll(expenses);
-          currentPage++;
+          hasMore = expenses.length == pageSize;
+          if (event.isLoadMore) {
+            currentPage++;
+          } else {
+            currentPage = 2; // Set to 2 for next page load
+          }
         }
 
         filterType = event.filterType ?? 'All';
+
+        // Update stored summary data based on current expenses list
+        _updateStoredSummaryFromExpenses();
+
         safeEmit(
           GetAllExpensesSuccess(
             expensesList: List.from(expensesList),
@@ -86,30 +120,118 @@ class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
   }
 
 ////////////////////////////////////////////////////////////////////////////////
-  Future<void> _handleLoadDashboardSummary(LoadDashboardSummary event, Emitter<DashboardStates> emit) async {
+  Future<void> _handleLoadDashboardSummary(
+      LoadDashboardSummary event, Emitter<DashboardStates> emit) async {
     safeEmit(DashboardSummaryLoading(), emit);
-    final result = await getExpensesSummaryUseCase(filterType: event.filterType);
+    final result =
+        await getExpensesSummaryUseCase(filterType: event.filterType);
     result.fold(
       (failure) {
         safeEmit(DashboardSummaryError(failure.errorMessage), emit);
       },
       (summary) {
+        // Only use API summary if we don't have expenses loaded yet
+        // Otherwise, calculate from current expenses to keep it in sync
+        if (expensesList.isEmpty) {
+          _lastTotalBalance = summary['totalBalance'] ?? 0.0;
+          _lastTotalIncome = summary['totalIncome'] ?? 0.0;
+          _lastTotalExpenses = summary['totalExpenses'] ?? 0.0;
+        } else {
+          // Update from current expenses to ensure accuracy
+          _updateStoredSummaryFromExpenses();
+        }
+
         safeEmit(
-          DashboardSummaryLoaded(
-            totalBalance: summary['totalBalance'] ?? 0.0,
-            totalIncome: summary['totalIncome'] ?? 0.0,
-            totalExpenses: summary['totalExpenses'] ?? 0.0,
-            currentFilter: event.filterType,
-          ),emit);
+            DashboardSummaryLoaded(
+              totalBalance: _lastTotalBalance!,
+              totalIncome: _lastTotalIncome!,
+              totalExpenses: _lastTotalExpenses!,
+              currentFilter: event.filterType,
+            ),
+            emit);
       },
     );
   }
+
 ////////////////////////////////////////////////////////////////////////////////
-  Future<void> _handleRefreshExpenses(RefreshAllExpensesEvents event, Emitter<DashboardStates> emit) async {
-    debugPrint('DashboardBloc: Refreshing expenses with filter: ${event.filterType}');
+  Future<void> _handleRefreshExpenses(
+      RefreshAllExpensesEvents event, Emitter<DashboardStates> emit) async {
+    debugPrint(
+        'DashboardBloc: Refreshing expenses with filter: ${event.filterType}');
+    // Reset pagination and reload expenses
+    currentPage = 1;
+    hasMore = true;
+    expensesList.clear();
+    await _handleGetAllExpenses(
+      GetAllExpensesEvents(filterType: event.filterType),
+      emit,
+    );
   }
+
 ////////////////////////////////////////////////////////////////////////////////
-  Future<void> _handleApplyFilter(ApplyFilter event, Emitter<DashboardStates> emit) async {
+  Future<void> _handleApplyFilter(
+      ApplyFilter event, Emitter<DashboardStates> emit) async {
     debugPrint('DashboardBloc: Applying filter: ${event.filterType}');
+    // Reset pagination and reload expenses with new filter
+    currentPage = 1;
+    hasMore = true;
+    expensesList.clear();
+    await _handleGetAllExpenses(
+      GetAllExpensesEvents(filterType: event.filterType),
+      emit,
+    );
+    // Also reload summary for new filter
+    await _handleLoadDashboardSummary(
+      LoadDashboardSummary(filterType: event.filterType),
+      emit,
+    );
   }
+
+  Future<void> _handleAddSingleExpense(
+      AddSingleExpense event, Emitter<DashboardStates> emit) async {
+    debugPrint(
+        'DashboardBloc: Adding single expense with filter: ${event.filterType}');
+    // Refresh expenses and then emit updated summary
+    await _handleGetAllExpenses(
+      GetAllExpensesEvents(filterType: event.filterType),
+      emit,
+    );
+
+    // Emit updated summary state after expenses are refreshed
+    if (_lastTotalBalance != null) {
+      safeEmit(
+        DashboardSummaryLoaded(
+          totalBalance: _lastTotalBalance!,
+          totalIncome: _lastTotalIncome!,
+          totalExpenses: _lastTotalExpenses!,
+          currentFilter: event.filterType,
+        ),
+        emit,
+      );
+    }
+  }
+
+  // Helper method to update stored summary from current expenses list
+  void _updateStoredSummaryFromExpenses() {
+    if (expensesList.isEmpty) return;
+
+    double totalIncome = 0.0;
+    double totalExpenses = 0.0;
+
+    for (final expense in expensesList) {
+      if (expense.type == 'income') {
+        totalIncome += expense.convertedAmount;
+      } else {
+        totalExpenses += expense.convertedAmount;
+      }
+    }
+
+    _lastTotalIncome = totalIncome;
+    _lastTotalExpenses = totalExpenses;
+    _lastTotalBalance = totalIncome - totalExpenses;
+
+    debugPrint(
+        'DashboardBloc: Updated stored summary from ${expensesList.length} expenses - Balance: $_lastTotalBalance, Income: $_lastTotalIncome, Expenses: $_lastTotalExpenses');
+  }
+////////////////////////////////////////////////////////////////////////////////
 }

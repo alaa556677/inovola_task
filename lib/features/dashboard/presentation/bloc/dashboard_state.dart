@@ -17,11 +17,8 @@ class GetAllExpensesSuccess extends DashboardStates {
   final String? currentFilter;
   final bool? hasMore;
 
-  const GetAllExpensesSuccess({
-    required this.expensesList,
-    this.currentFilter,
-    this.hasMore = false
-  });
+  const GetAllExpensesSuccess(
+      {required this.expensesList, this.currentFilter, this.hasMore = false});
 
   @override
   List<Object?> get props => [expensesList, currentFilter, hasMore];

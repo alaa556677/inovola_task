@@ -4,10 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:inovola_task/core/style/colors.dart';
 import 'package:inovola_task/core/widgets/text_default.dart';
 import '../../../../../core/widgets/set_height_width.dart';
-import 'background_color_widget.dart';
 import '../bloc/dashboard_state.dart';
 import '../bloc/dashboard_bloc.dart';
-import '../bloc/dashboard_event.dart';
 
 class SummaryExpenseWidget extends StatelessWidget {
   const SummaryExpenseWidget({super.key});
@@ -15,6 +13,13 @@ class SummaryExpenseWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<DashboardBloc, DashboardStates>(
+      buildWhen: (previous, current) {
+        // Rebuild when summary states change or when expenses change (to update calculated summary)
+        return current is DashboardSummaryLoaded ||
+            current is DashboardSummaryLoading ||
+            current is GetAllExpensesSuccess ||
+            current is GetAllExpensesLoading;
+      },
       builder: (context, state) {
         double totalBalance = 0.0;
         double totalIncome = 0.0;
@@ -27,6 +32,27 @@ class SummaryExpenseWidget extends StatelessWidget {
           totalExpenses = state.totalExpenses;
         } else if (state is DashboardSummaryLoading) {
           isLoading = true;
+        } else {
+          // Use stored summary data if available, otherwise calculate from expenses
+          final bloc = context.read<DashboardBloc>();
+          if (bloc.lastTotalBalance != 0.0 ||
+              bloc.lastTotalIncome != 0.0 ||
+              bloc.lastTotalExpenses != 0.0) {
+            // Use stored summary data
+            totalBalance = bloc.lastTotalBalance;
+            totalIncome = bloc.lastTotalIncome;
+            totalExpenses = bloc.lastTotalExpenses;
+          } else if (bloc.expensesList.isNotEmpty) {
+            // Calculate from expenses as fallback
+            for (final expense in bloc.expensesList) {
+              if (expense.type == 'income') {
+                totalIncome += expense.convertedAmount;
+              } else {
+                totalExpenses += expense.convertedAmount;
+              }
+            }
+            totalBalance = totalIncome - totalExpenses;
+          }
         }
 
         return Container(
@@ -93,7 +119,9 @@ class SummaryExpenseWidget extends StatelessWidget {
                   ),
                   setHeightSpace(4),
                   CustomTextWidget(
-                    text: isLoading ? "Loading ..." : "\$ ${totalBalance.toStringAsFixed(2)}",
+                    text: isLoading
+                        ? "Loading ..."
+                        : "\$ ${totalBalance.toStringAsFixed(2)}",
                     fontColor: AppColors.whiteColor,
                     fontSize: 18.sp,
                   ),

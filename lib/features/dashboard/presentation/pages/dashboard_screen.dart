@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:inovola_task/core/widgets/set_height_width.dart';
 import 'package:inovola_task/core/widgets/text_default.dart';
 import 'package:inovola_task/features/dashboard/presentation/bloc/dashboard_state.dart';
+
 import '../../../../core/style/colors.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../bloc/dashboard_bloc.dart';
@@ -30,18 +31,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 200) {
-        Future.delayed(Duration(seconds: 2), (){
-          context.read<DashboardBloc>().add(const GetAllExpensesEvents(isLoadMore: true),);
+        Future.delayed(Duration(seconds: 2), () {
+          context.read<DashboardBloc>().add(
+                const GetAllExpensesEvents(isLoadMore: true),
+              );
         });
       }
     });
-    context.read<DashboardBloc>().add(const GetAllExpensesEvents(filterType: 'This Month'));
-    context.read<DashboardBloc>().add(const LoadDashboardSummary(filterType: 'This Month'));
-  }
-
-  Future<void> _refreshData() async {
-    context.read<DashboardBloc>().add(const GetAllExpensesEvents(filterType: 'This Month'));
-    context.read<DashboardBloc>().add(const LoadDashboardSummary(filterType: 'This Month'));
+    // Load summary first, then expenses to ensure summary data is available
+    context
+        .read<DashboardBloc>()
+        .add(const LoadDashboardSummary(filterType: 'This Month'));
+    context
+        .read<DashboardBloc>()
+        .add(const GetAllExpensesEvents(filterType: 'This Month'));
   }
 
   @override
@@ -101,29 +104,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             current is GetAllExpensesError;
                       },
                       builder: (context, state) {
-                        if (state is GetAllExpensesLoading &&  context.read<DashboardBloc>().expensesList.isEmpty) {
-                          return const Center(child: CircularProgressIndicator());
+                        if (state is GetAllExpensesLoading &&
+                            context
+                                .read<DashboardBloc>()
+                                .expensesList
+                                .isEmpty) {
+                          return const Center(
+                              child: CircularProgressIndicator());
                         }
 
                         if (state is GetAllExpensesError) {
-                          return Center(child: Text("Error: ${state.errorMessage}"));
+                          return Center(
+                              child: Text("Error: ${state.errorMessage}"));
                         }
 
                         if (state is GetAllExpensesSuccess) {
                           return ListView.separated(
                             controller: _scrollController,
-                            separatorBuilder: (context, index) => setHeightSpace(12),
+                            separatorBuilder: (context, index) =>
+                                setHeightSpace(12),
                             itemCount: state.hasMore == true
                                 ? state.expensesList.length + 1
                                 : state.expensesList.length,
                             itemBuilder: (context, index) {
                               if (index < state.expensesList.length) {
                                 final expense = state.expensesList[index];
-                                return ExpenseCardWidget(getExpenseEntity: expense);
+                                return ExpenseCardWidget(
+                                    getExpenseEntity: expense);
                               } else {
                                 return const Padding(
                                   padding: EdgeInsets.all(16),
-                                  child: Center(child: CircularProgressIndicator()),
+                                  child: Center(
+                                      child: CircularProgressIndicator()),
                                 );
                               }
                             },
@@ -132,7 +144,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                         return const SizedBox();
                       },
-
                     ),
                   )
                 ],
@@ -145,12 +156,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           onPressed: () async {
             final result = await Navigator.pushNamed(context, "/add-expense");
             if (result == true) {
+              // Use the special event for adding single expense to preserve summary
               context
                   .read<DashboardBloc>()
-                  .add(const GetAllExpensesEvents(filterType: 'This Month'));
-              context
-                  .read<DashboardBloc>()
-                  .add(const LoadDashboardSummary(filterType: 'This Month'));
+                  .add(const AddSingleExpense(filterType: 'This Month'));
             }
           },
           backgroundColor: Colors.blue,
@@ -226,7 +235,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           totalExpenses: totalExpenses,
         ),
       );
-    }else{
+    } else {
       if (currentState is GetAllExpensesLoading) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -234,7 +243,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             backgroundColor: AppColors.warning,
           ),
         );
-      }else{
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('No expenses found to export'),

@@ -10,10 +10,7 @@ abstract class DashboardEvents extends Equatable {
 class GetAllExpensesEvents extends DashboardEvents {
   final String? filterType;
   final bool isLoadMore;
-  const GetAllExpensesEvents({
-    this.filterType,
-    this.isLoadMore = false
-  });
+  const GetAllExpensesEvents({this.filterType, this.isLoadMore = false});
 
   @override
   List<Object?> get props => [filterType, isLoadMore];
@@ -46,4 +43,11 @@ class ApplyFilter extends DashboardEvents {
   List<Object?> get props => [filterType];
 }
 
+class AddSingleExpense extends DashboardEvents {
+  final String? filterType;
 
+  const AddSingleExpense({this.filterType});
+
+  @override
+  List<Object?> get props => [filterType];
+}
