@@ -33,6 +33,7 @@ class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
 ////////////////////////////////////////////////////////////////////////////////
   List<ExpenseEntity> expensesList = [];
   String? filterType;
+<<<<<<< HEAD
   int currentPage = 1;
   final int pageSize = 10;
   bool hasMore = true;
@@ -67,9 +68,26 @@ class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
       filterType: event.filterType,
       page: currentPage,
       limit: pageSize,
+=======
+  int page = 0;
+  final int pageSize = 10;
+
+  Future<void> _handleGetAllExpenses(
+      GetAllExpensesEvents event,
+      Emitter<DashboardStates> emit,
+      ) async {
+    emit(GetAllExpensesLoading());
+    await Future.delayed(const Duration(seconds: 1));
+    final result = await getExpenseUseCase(
+      cancelToken: cancelToken,
+      filterType: event.filterType,
+      page: event.pageKey,
+      limit: 10,
+>>>>>>> 176486876e7b4bf114dfed15146c5c2be23792a4
     );
 
     result.fold(
+<<<<<<< HEAD
       (failure) {
         debugPrint(
             'DashboardBloc: Failed to load expenses: ${failure.errorMessage}');
@@ -108,6 +126,13 @@ class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
           emit,
         );
       },
+=======
+          (failure) => emit(GetAllExpensesError(failure.errorMessage)),
+          (expenses) => emit(GetAllExpensesSuccess(
+            expensesList: expenses,
+            currentFilter: event.filterType,
+          )),
+>>>>>>> 176486876e7b4bf114dfed15146c5c2be23792a4
     );
 
     isLoadingMore = false;

@@ -44,6 +44,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
       expenses.sort((a, b) => b.date.compareTo(a.date));
 
       // Apply pagination
+<<<<<<< HEAD
       if (page == null || page < 1) page = 1;
 
       final startIndex = (page - 1) * limit!;
@@ -53,6 +54,18 @@ class DashboardRepositoryImpl implements DashboardRepository {
 
       final endIndex = (startIndex + limit).clamp(0, expenses.length);
       expenses = expenses.sublist(startIndex, endIndex);
+=======
+      // Pagination
+      if (page != null && limit != null) {
+        final startIndex = page * limit;
+        if (startIndex >= expenses.length) {
+          return const Right([]); // مفيش داتا تانية
+        }
+        final endIndex = (startIndex + limit).clamp(0, expenses.length);
+        expenses = expenses.sublist(startIndex, endIndex);
+      }
+
+>>>>>>> 176486876e7b4bf114dfed15146c5c2be23792a4
 
       final entities = expenses.map((model) => model.toEntity()).toList();
       print('ExpenseRepository: Returning ${entities.length} expense entities');

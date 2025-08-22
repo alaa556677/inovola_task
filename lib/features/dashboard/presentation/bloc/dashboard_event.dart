@@ -9,11 +9,23 @@ abstract class DashboardEvents extends Equatable {
 
 class GetAllExpensesEvents extends DashboardEvents {
   final String? filterType;
+<<<<<<< HEAD
   final bool isLoadMore;
   const GetAllExpensesEvents({this.filterType, this.isLoadMore = false});
 
   @override
   List<Object?> get props => [filterType, isLoadMore];
+=======
+  final int pageKey;
+
+  const GetAllExpensesEvents({
+    this.filterType,
+    required this.pageKey
+  });
+
+  @override
+  List<Object?> get props => [filterType, pageKey];
+>>>>>>> 176486876e7b4bf114dfed15146c5c2be23792a4
 }
 
 class LoadDashboardSummary extends DashboardEvents {
