@@ -1,6 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/services/cancel_token.dart';
-import '../../../../core/services/currency_service.dart';
 import '../../domain/entities/expense_entity.dart';
 import '../../domain/useCase/add_expense_use_case.dart';
 import '../../domain/useCase/convertFromUSD_useCase.dart';
@@ -14,14 +13,12 @@ class AddExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> with BlocCancelTok
   final ConvertFromUSDUseCase convertFromUSDUseCase;
   final ConvertToUSDUseCase convertToUSDUseCase;
   final GetExchangeRateUseCase getExchangeRateUseCase;
-  // final CurrencyService currencyService;
 
   AddExpenseBloc({
     required this.addExpenseUseCase,
     required this.getExchangeRateUseCase,
     required this.convertToUSDUseCase,
     required this.convertFromUSDUseCase,
-    // required this.currencyService,
   }) : super(ExpenseInitial()) {
     on<ExpenseEvent>((event, emit) async {
       if (event is AddExpense) {

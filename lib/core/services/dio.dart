@@ -6,7 +6,7 @@ class DioHelper{
   static Dio? dio;
   static init(){
     dio = Dio(BaseOptions(
-      baseUrl: "https://jsonplaceholder.typicode.com/",
+      baseUrl: "https://open.er-api.com/v6/latest/",
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 20),
       sendTimeout: const Duration(seconds: 20),

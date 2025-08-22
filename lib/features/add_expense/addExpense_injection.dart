@@ -1,6 +1,4 @@
 import 'package:inovola_task/features/add_expense/presentation/bloc/addExpense_bloc.dart';
-
-import '../../core/services/currency_service.dart';
 import '../../locator.dart';
 import 'data/dataSource/local/getCache_dataSource.dart';
 import 'data/dataSource/local/local_dataSource.dart';
@@ -34,5 +32,5 @@ addExpenseInjection(){
 
   // data source
   locator.registerLazySingleton<CurrencyLocalDataSource>(() => CurrencyLocalDataSourceImpl());
-  locator.registerLazySingleton<CurrencyRemoteDataSource>(() => GetCurrencyDatasource(locator()));
+  locator.registerLazySingleton<CurrencyRemoteDataSource>(() => GetCurrencyDatasource());
 }
