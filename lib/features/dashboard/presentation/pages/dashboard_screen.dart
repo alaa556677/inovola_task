@@ -13,6 +13,7 @@ import '../widgets/Summary_expense_widget.dart';
 import '../widgets/background_color_widget.dart';
 import '../widgets/expense_card_widget.dart';
 import '../widgets/user_pic_widget.dart';
+import '../widgets/export_dialog.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -25,13 +26,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<DashboardBloc>().add(const GetAllExpensesEvents(filterType: 'This Month'));
-    context.read<DashboardBloc>().add(const LoadDashboardSummary(filterType: 'This Month'));
+    context
+        .read<DashboardBloc>()
+        .add(const GetAllExpensesEvents(filterType: 'This Month'));
+    context
+        .read<DashboardBloc>()
+        .add(const LoadDashboardSummary(filterType: 'This Month'));
   }
 
   Future<void> _refreshData() async {
-    context.read<DashboardBloc>().add(const GetAllExpensesEvents(filterType: 'This Month'));
-    context.read<DashboardBloc>().add(const LoadDashboardSummary(filterType: 'This Month'));
+    context
+        .read<DashboardBloc>()
+        .add(const GetAllExpensesEvents(filterType: 'This Month'));
+    context
+        .read<DashboardBloc>()
+        .add(const LoadDashboardSummary(filterType: 'This Month'));
   }
 
   @override
@@ -66,7 +75,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
                       InkWell(
-                        onTap: (){},
+                        onTap: () => _showExportDialog(context),
                         child: CustomTextWidget(
                           text: "export",
                           fontSize: 12.sp,
@@ -97,27 +106,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           return RefreshIndicator(
                             onRefresh: _refreshData,
                             child: state.expensesList.isEmpty
-                                ?Center(
-                                    child: CustomTextWidget(text: 'No expenses found', fontSize: 14.sp,),
-                            ):ListView.separated(
-                              itemBuilder: (context, index) {
-                                final expense = state.expensesList[index];
-                                return ExpenseCardWidget(
-                                  getExpenseEntity: expense,
-                                );
-                              },
-                              itemCount: state.expensesList.length, separatorBuilder: (context, index) => setHeightSpace(10),
-                            ),
+                                ? Center(
+                                    child: CustomTextWidget(
+                                      text: 'No expenses found',
+                                      fontSize: 14.sp,
+                                    ),
+                                  )
+                                : ListView.separated(
+                                    itemBuilder: (context, index) {
+                                      final expense = state.expensesList[index];
+                                      return ExpenseCardWidget(
+                                        getExpenseEntity: expense,
+                                      );
+                                    },
+                                    itemCount: state.expensesList.length,
+                                    separatorBuilder: (context, index) =>
+                                        setHeightSpace(10),
+                                  ),
                           );
                         } else if (state is GetAllExpensesError) {
                           return Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                CustomTextWidget(text: 'Error: ${state.errorMessage}', fontSize: 14.sp,),
+                                CustomTextWidget(
+                                  text: 'Error: ${state.errorMessage}',
+                                  fontSize: 14.sp,
+                                ),
                                 ElevatedButton(
                                   onPressed: _refreshData,
-                                  child: CustomTextWidget(text: 'Retry', fontSize: 12.sp,),
+                                  child: CustomTextWidget(
+                                    text: 'Retry',
+                                    fontSize: 12.sp,
+                                  ),
                                 ),
                               ],
                             ),
@@ -139,8 +160,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
           onPressed: () async {
             final result = await Navigator.pushNamed(context, "/add-expense");
             if (result == true) {
-              context.read<DashboardBloc>().add(const GetAllExpensesEvents(filterType: 'This Month'));
-              context.read<DashboardBloc>().add(const LoadDashboardSummary(filterType: 'This Month'));
+              context
+                  .read<DashboardBloc>()
+                  .add(const GetAllExpensesEvents(filterType: 'This Month'));
+              context
+                  .read<DashboardBloc>()
+                  .add(const LoadDashboardSummary(filterType: 'This Month'));
             }
           },
           backgroundColor: Colors.blue,
@@ -183,5 +208,65 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
     );
+  }
+
+  void _showExportDialog(BuildContext context) {
+    // Check if we have expenses data first
+    final bloc = context.read<DashboardBloc>();
+    final currentState = bloc.state;
+
+    // Check if we have expenses data
+    if (currentState is GetAllExpensesSuccess) {
+      // Check if we also have summary data
+      if (currentState.expensesList.isNotEmpty) {
+        // Get summary data - we'll use default values if not available
+        double totalBalance = 0;
+        double totalIncome = 0;
+        double totalExpenses = 0;
+
+        // Calculate basic summary from expenses if summary not loaded
+        for (final expense in currentState.expensesList) {
+          if (expense.type == 'income') {
+            totalIncome += expense.convertedAmount;
+          } else {
+            totalExpenses += expense.convertedAmount;
+          }
+        }
+        totalBalance = totalIncome - totalExpenses;
+
+        showDialog(
+          context: context,
+          builder: (context) => ExportDialog(
+            expenses: currentState.expensesList,
+            filterType: currentState.currentFilter ?? 'All',
+            totalBalance: totalBalance,
+            totalIncome: totalIncome,
+            totalExpenses: totalExpenses,
+          ),
+        );
+      } else {
+        // No expenses to export
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('No expenses found to export'),
+            backgroundColor: AppColors.warning,
+          ),
+        );
+      }
+    } else if (currentState is GetAllExpensesLoading) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please wait for expenses to load before exporting'),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please wait for expenses to load before exporting'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 }

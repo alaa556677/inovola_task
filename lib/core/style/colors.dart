@@ -25,6 +25,11 @@ class AppColors {
   static const Color income = Color(0xFF4ECDC4);
   static const Color expense = Color(0xFFFF6B6B);
   static const Color neutral = Color(0xFF95A5A6);
+  
+  // Export Dialog Colors
+  static const Color primaryColor = primary;
+  static const Color greyColor = textSecondary;
+  static const Color lightGreyColor = Color(0xFFE9ECEF);
 
   // Gradient Colors
   static const LinearGradient primaryGradient = LinearGradient(
