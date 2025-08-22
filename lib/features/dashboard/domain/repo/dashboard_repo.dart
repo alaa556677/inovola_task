@@ -2,7 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/failure/failure.dart';
 import '../../../add_expense/domain/entities/expense_entity.dart';
 
-abstract class ExpenseRepository {
+abstract class DashboardRepository {
   /// Get all expenses with optional filtering
   Future<Either<Failure, List<ExpenseEntity>>> getAllExpenses({
     String? filterType,
@@ -11,7 +11,7 @@ abstract class ExpenseRepository {
   });
 
   /// Add a new expense
-  Future<Either<Failure, ExpenseEntity>> addExpense(ExpenseEntity expense);
+
 
 
   /// Get expenses summary (totals, balances)

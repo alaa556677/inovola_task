@@ -1,9 +1,9 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/failure/failure.dart';
-import '../repo/expense_repo.dart';
+import '../repo/dashboard_repo.dart';
 
 class GetExpensesSummaryUseCase {
-  final ExpenseRepository expenseRepository;
+  final DashboardRepository expenseRepository;
 
   GetExpensesSummaryUseCase(this.expenseRepository);
 

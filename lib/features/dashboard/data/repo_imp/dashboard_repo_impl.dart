@@ -1,15 +1,15 @@
 import 'package:dartz/dartz.dart';
 import 'package:hive/hive.dart';
 import '../../../../core/failure/failure.dart';
+import '../../../add_expense/data/models/expense_model.dart';
 import '../../../add_expense/domain/entities/expense_entity.dart';
-import '../../domain/repo/expense_repo.dart';
-import '../models/expense_model.dart';
+import '../../domain/repo/dashboard_repo.dart';
 
-class ExpenseRepositoryImpl implements ExpenseRepository {
+class DashboardRepositoryImpl implements DashboardRepository {
   static const String _boxName = 'expenses';
   late Box<ExpenseModel> _expenseBox;
 
-  ExpenseRepositoryImpl() {
+  DashboardRepositoryImpl() {
     _initBox();
   }
 
@@ -20,7 +20,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       _expenseBox = Hive.box<ExpenseModel>(_boxName);
     }
   }
-
+////////////////////////////////////////////////////////////////////////////////
   @override
   Future<Either<Failure, List<ExpenseEntity>>> getAllExpenses({
     String? filterType,
@@ -62,98 +62,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       return Left(Failure('Failed to get expenses: ${e.toString()}'));
     }
   }
-
-  @override
-  Future<Either<Failure, ExpenseEntity>> addExpense(
-      ExpenseEntity expense) async {
-    try {
-      await _initBox();
-      print('ExpenseRepository: Adding expense - ${expense.category}: ${expense.amount} ${expense.currency}');
-
-      final model = ExpenseModel.fromEntity(expense);
-      await _expenseBox.add(model);
-      print('ExpenseRepository: Successfully added expense to box');
-
-      return Right(expense);
-    } catch (e) {
-      print('ExpenseRepository: Error adding expense: $e');
-      return Left(Failure('Failed to add expense: ${e.toString()}'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, ExpenseEntity>> updateExpense(
-      ExpenseEntity expense) async {
-    try {
-      await _initBox();
-
-      final key = _expenseBox.keys.firstWhere(
-        (key) => _expenseBox.get(key)?.id == expense.id,
-        orElse: () => -1,
-      );
-
-      if (key == -1) {
-        return Left(Failure('Expense not found'));
-      }
-
-      final model = ExpenseModel.fromEntity(expense);
-      await _expenseBox.put(key, model);
-
-      return Right(expense);
-    } catch (e) {
-      return Left(Failure('Failed to update expense: ${e.toString()}'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, bool>> deleteExpense(String id) async {
-    try {
-      await _initBox();
-
-      final key = _expenseBox.keys.firstWhere(
-        (key) => _expenseBox.get(key)?.id == id,
-        orElse: () => -1,
-      );
-
-      if (key == -1) {
-        return Left(Failure('Expense not found'));
-      }
-
-      await _expenseBox.delete(key);
-      return const Right(true);
-    } catch (e) {
-      return Left(Failure('Failed to delete expense: ${e.toString()}'));
-    }
-  }
-
-  @override
-  Future<Either<Failure, ExpenseEntity?>> getExpenseById(String id) async {
-    try {
-      await _initBox();
-
-      final expense = _expenseBox.values.firstWhere(
-        (expense) => expense.id == id,
-        orElse: () => ExpenseModel(
-          id: '',
-          category: '',
-          amount: 0,
-          currency: 'USD',
-          convertedAmount: 0,
-          date: DateTime.now(),
-          type: 'expense',
-        ),
-      );
-
-      if (expense.id.isEmpty) {
-        return const Right(null);
-      }
-
-      return Right(expense?.toEntity());
-    } catch (e) {
-      return Left(Failure('Failed to get expense: ${e.toString()}'));
-    }
-  }
-
+////////////////////////////////////////////////////////////////////////////////
   @override
   Future<Either<Failure, Map<String, double>>> getExpensesSummary({
     String? filterType,
@@ -189,38 +98,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       return Left(Failure('Failed to get expenses summary: ${e.toString()}'));
     }
   }
-
-  @override
-  Future<Either<Failure, Map<String, double>>> getExpensesByCategory({
-    String? filterType,
-  }) async {
-    try {
-      await _initBox();
-
-      List<ExpenseModel> expenses = _expenseBox.values.toList();
-
-      if (filterType != null) {
-        expenses = _applyFilter(expenses, filterType);
-      }
-
-      final Map<String, double> categoryTotals = {};
-
-      for (final expense in expenses) {
-        final category = expense.category;
-        final amount = expense.convertedAmount;
-
-        if (expense.type == 'expense') {
-          categoryTotals[category] = (categoryTotals[category] ?? 0) + amount;
-        }
-      }
-
-      return Right(categoryTotals);
-    } catch (e) {
-      return Left(
-          Failure('Failed to get expenses by category: ${e.toString()}'));
-    }
-  }
-
+////////////////////////////////////////////////////////////////////////////////
   List<ExpenseModel> _applyFilter(
       List<ExpenseModel> expenses, String filterType) {
     final now = DateTime.now();

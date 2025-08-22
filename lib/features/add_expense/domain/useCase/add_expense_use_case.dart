@@ -1,14 +1,14 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/failure/failure.dart';
-import '../../../dashboard/domain/repo/expense_repo.dart';
 import '../entities/expense_entity.dart';
+import '../repo/addExpense_repo.dart';
 
 class AddExpenseUseCase {
-  final ExpenseRepository expenseRepository;
+  final AddExpenseRepository addExpenseRepository;
 
-  AddExpenseUseCase(this.expenseRepository);
+  AddExpenseUseCase(this.addExpenseRepository);
 
   Future<Either<Failure, ExpenseEntity>> call(ExpenseEntity expense) async {
-    return await expenseRepository.addExpense(expense);
+    return await addExpenseRepository.addExpense(expense);
   }
 }

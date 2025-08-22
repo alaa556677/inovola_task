@@ -2,10 +2,10 @@ import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import '../../../../core/failure/failure.dart';
 import '../../../add_expense/domain/entities/expense_entity.dart';
-import '../repo/expense_repo.dart';
+import '../repo/dashboard_repo.dart';
 
 class GetExpenseUseCase {
-  final ExpenseRepository expenseRepository;
+  final DashboardRepository expenseRepository;
   GetExpenseUseCase(this.expenseRepository);
 
   Future<Either<Failure, List<ExpenseEntity>>> call(
