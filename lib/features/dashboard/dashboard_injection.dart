@@ -29,8 +29,4 @@ initDashboardInjection() {
       getExpensesSummaryUseCase: locator<GetExpensesSummaryUseCase>(),
     ),
   );
-<<<<<<< HEAD
-=======
-
->>>>>>> 176486876e7b4bf114dfed15146c5c2be23792a4
 }

@@ -1,15 +1,14 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:inovola_task/core/widgets/set_height_width.dart';
 import 'package:inovola_task/core/widgets/text_default.dart';
 import 'package:inovola_task/features/dashboard/presentation/bloc/dashboard_state.dart';
 
 import '../../../../core/style/colors.dart';
 import '../../../../core/widgets/loading_widget.dart';
-import '../../../add_expense/domain/entities/expense_entity.dart';
 import '../bloc/dashboard_bloc.dart';
 import '../bloc/dashboard_event.dart';
 import '../widgets/Summary_expense_widget.dart';
@@ -26,7 +25,6 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-<<<<<<< HEAD
   final ScrollController _scrollController = ScrollController();
   @override
   void initState() {
@@ -36,8 +34,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _scrollController.position.maxScrollExtent - 200) {
         Future.delayed(Duration(seconds: 2), () {
           context.read<DashboardBloc>().add(
-                const GetAllExpensesEvents(isLoadMore: true),
-              );
+            const GetAllExpensesEvents(isLoadMore: true),
+          );
         });
       }
     });
@@ -48,42 +46,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     context
         .read<DashboardBloc>()
         .add(const GetAllExpensesEvents(filterType: 'This Month'));
-=======
-  final PagingController<int, ExpenseEntity> _pagingController =
-  PagingController(firstPageKey: 0);
-
-  @override
-  void initState() {
-    super.initState();
-    _pagingController.addPageRequestListener((pageKey) async {
-      // ⏳ delay قبل تحميل أي صفحة جديدة
-      await Future.delayed(const Duration(seconds: 1));
-      context.read<DashboardBloc>().add(GetAllExpensesEvents(
-        filterType: "All",
-        pageKey: pageKey,
-      ));
-    });
->>>>>>> 176486876e7b4bf114dfed15146c5c2be23792a4
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocListener<DashboardBloc, DashboardStates>(
-      listener: (context, state) {
-      if (state is GetAllExpensesSuccess) {
-        final isLastPage = state.expensesList.length < 10; // 10 = limit
-        if (isLastPage) {
-          _pagingController.appendLastPage(state.expensesList);
-        } else {
-          final nextPageKey = (_pagingController.nextPageKey ?? 0) + 1;
-          // علشان تبين تجربة التحميل
-          Future.delayed(const Duration(seconds: 1));
-          _pagingController.appendPage(state.expensesList, nextPageKey);
-        }
-      } else if (state is GetAllExpensesError) {
-        _pagingController.error = state.errorMessage;
-      }
-      },
+      listener: (context, state) {},
       child: Scaffold(
         backgroundColor: AppColors.whiteColor,
         body: Stack(
@@ -131,11 +99,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Expanded(
                     child: BlocBuilder<DashboardBloc, DashboardStates>(
                       buildWhen: (previous, current) {
+                        // Rebuild when expenses state changes
                         return current is GetAllExpensesLoading ||
                             current is GetAllExpensesSuccess ||
                             current is GetAllExpensesError;
                       },
-<<<<<<< HEAD
                       builder: (context, state) {
                         if (state is GetAllExpensesLoading &&
                             context
@@ -177,19 +145,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                         return const SizedBox();
                       },
-=======
-                      builder: (context, state) => PagedListView<int, ExpenseEntity>(
-                        pagingController: _pagingController,
-                        builderDelegate: PagedChildBuilderDelegate<ExpenseEntity>(
-                          itemBuilder: (context, item, index) =>
-                              ExpenseCardWidget(getExpenseEntity: item),
-                          firstPageProgressIndicatorBuilder: (_) =>
-                          const Center(child: LoadingWidget()),
-                          newPageProgressIndicatorBuilder: (_) =>
-                          const Center(child: LoadingWidget()),
-                        ),
-                      ),
->>>>>>> 176486876e7b4bf114dfed15146c5c2be23792a4
                     ),
                   )
                 ],
@@ -205,11 +160,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // Use the special event for adding single expense to preserve summary
               context
                   .read<DashboardBloc>()
-<<<<<<< HEAD
                   .add(const AddSingleExpense(filterType: 'This Month'));
-=======
-                  .add(const LoadDashboardSummary(filterType: 'This Month'));
->>>>>>> 176486876e7b4bf114dfed15146c5c2be23792a4
             }
           },
           backgroundColor: Colors.blue,
@@ -255,14 +206,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _showExportDialog(BuildContext context) {
+    // Check if we have expenses data first
     final bloc = context.read<DashboardBloc>();
     final currentState = bloc.state;
 
+    // Check if we have expenses data
     if (bloc.expensesList.isNotEmpty) {
       double totalBalance = 0;
       double totalIncome = 0;
       double totalExpenses = 0;
 
+      // Calculate basic summary from expenses if summary not loaded
       for (final expense in bloc.expensesList) {
         if (expense.type == 'income') {
           totalIncome += expense.convertedAmount;
