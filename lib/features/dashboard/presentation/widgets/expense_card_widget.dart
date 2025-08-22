@@ -27,16 +27,12 @@ class ExpenseCardWidget extends StatelessWidget {
           borderRadius: BorderRadius.circular(12.r)),
       child: Row(
         children: [
-          getExpenseEntity.receiptPath != null
-              ? Container(
-            decoration: BoxDecoration(
+          getExpenseEntity.receiptPath != null ? Container(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle
             ),
-
-
-                  child: _buildReceiptImage(),
-                )
-              : const ImageCardWidget(),
+            child: _buildReceiptImage(),
+          ):const ImageCardWidget(),
           setWidthSpace(12),
           Expanded(
             child: Column(
@@ -54,10 +50,13 @@ class ExpenseCardWidget extends StatelessWidget {
                   fontSize: 10.sp,
                   fontColor: AppColors.blackColor,
                   fontWeight: FontWeight.w300,
+                  maxLines: 1,
+                  textOverflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
+          setWidthSpace(8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -87,11 +86,9 @@ class ExpenseCardWidget extends StatelessWidget {
 
   Widget _buildReceiptImage() {
     try {
-      // Check if the path is a local file
       if (getExpenseEntity.receiptPath!.startsWith('/')) {
         final file = File(getExpenseEntity.receiptPath!);
         if (file.existsSync()) {
-
           return Container(
             width: 50.w,
             height: 50.h,
@@ -105,8 +102,7 @@ class ExpenseCardWidget extends StatelessWidget {
           );
         }
       }
-      
-      // If not a local file, try to load as network image
+
       return CachedNetworkImage(
         imageUrl: getExpenseEntity.receiptPath!,
         width: 50.w,

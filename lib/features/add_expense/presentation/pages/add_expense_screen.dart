@@ -96,6 +96,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     setHeightSpace(16),
                     _buildReceiptSection(),
                     setHeightSpace(16),
+                    _buildNotesSection(),
+                    setHeightSpace(16),
                     _buildCategoryGridView()
                   ],
                 ),
@@ -311,6 +313,35 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   style: TextStyle(fontSize: 16.sp),
                 ),
               ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+////////////////////////////////////////////////////////////////////////////////
+  Widget _buildNotesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CustomTextWidget(
+          text: 'Notes (Optional)',
+          fontSize: 16.sp,
+          fontWeight: FontWeight.w600,
+          fontColor: AppColors.textPrimary,
+        ),
+        setHeightSpace(8),
+        TextFormField(
+          controller: _notesController,
+          maxLines: 3,
+          decoration: InputDecoration(
+            hintText: 'Add any additional notes...',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
             ),
           ),
         ),
