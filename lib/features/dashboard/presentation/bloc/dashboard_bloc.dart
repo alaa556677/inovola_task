@@ -38,12 +38,10 @@ class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
   bool hasMore = true;
   bool isLoadingMore = false;
 
-  // Store summary data to preserve it across state changes
   double? _lastTotalBalance;
   double? _lastTotalIncome;
   double? _lastTotalExpenses;
 
-  // Getters for stored summary data
   double get lastTotalBalance => _lastTotalBalance ?? 0.0;
   double get lastTotalIncome => _lastTotalIncome ?? 0.0;
   double get lastTotalExpenses => _lastTotalExpenses ?? 0.0;
@@ -51,11 +49,11 @@ class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
   Future<void> _handleGetAllExpenses(
       GetAllExpensesEvents event, Emitter<DashboardStates> emit) async {
     if (event.isLoadMore) {
-      if (isLoadingMore || !hasMore) return; // Prevent duplicate loading
+      if (isLoadingMore || !hasMore) return;
       isLoadingMore = true;
       safeEmit(GetAllExpensesLoading(), emit);
     } else {
-      // Only reset for new filter, preserve list for refresh
+
       if (filterType != event.filterType) {
         currentPage = 1;
         hasMore = true;
@@ -82,10 +80,8 @@ class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
             'DashboardBloc: Successfully loaded ${expenses.length} expenses');
 
         if (event.isLoadMore) {
-          // Add to existing list for pagination
           expensesList.addAll(expenses);
         } else {
-          // Replace list for new filter or refresh
           expensesList = List.from(expenses);
         }
 
@@ -96,13 +92,11 @@ class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
           if (event.isLoadMore) {
             currentPage++;
           } else {
-            currentPage = 2; // Set to 2 for next page load
+            currentPage = 2;
           }
         }
 
         filterType = event.filterType ?? 'All';
-
-        // Update stored summary data based on current expenses list
         _updateStoredSummaryFromExpenses();
 
         safeEmit(
