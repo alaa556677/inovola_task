@@ -31,33 +31,30 @@ class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
 ////////////////////////////////////////////////////////////////////////////////
   List<ExpenseEntity> expensesList = [];
   String? filterType;
-  Future<void> _handleGetAllExpenses(GetAllExpensesEvents event, Emitter<DashboardStates> emit) async {
-    debugPrint('DashboardBloc: Loading expenses with filter: ${event.filterType}');
-    safeEmit(GetAllExpensesLoading(), emit);
+  int page = 0;
+  final int pageSize = 10;
+
+  Future<void> _handleGetAllExpenses(
+      GetAllExpensesEvents event,
+      Emitter<DashboardStates> emit,
+      ) async {
+    emit(GetAllExpensesLoading());
+    await Future.delayed(const Duration(seconds: 1));
     final result = await getExpenseUseCase(
       cancelToken: cancelToken,
       filterType: event.filterType,
+      page: event.pageKey,
+      limit: 10,
     );
     result.fold(
-      (failure) {
-        debugPrint('DashboardBloc: Failed to load expenses: ${failure.errorMessage}');
-        safeEmit(GetAllExpensesError(failure.errorMessage), emit);
-      },
-      (expenses) {
-        debugPrint('DashboardBloc: Successfully loaded ${expenses.length} expenses');
-        for (var expense in expenses) {
-          debugPrint('DashboardBloc: Expense - ${expense.category}: ${expense.amount} ${expense.currency} on ${expense.date}');
-        }
-        expensesList = expenses;
-        filterType = event.filterType ?? 'All';
-        safeEmit(
-          GetAllExpensesSuccess(
+          (failure) => emit(GetAllExpensesError(failure.errorMessage)),
+          (expenses) => emit(GetAllExpensesSuccess(
             expensesList: expenses,
             currentFilter: event.filterType,
-          ),emit);
-      },
+          )),
     );
   }
+
 ////////////////////////////////////////////////////////////////////////////////
   Future<void> _handleLoadDashboardSummary(LoadDashboardSummary event, Emitter<DashboardStates> emit) async {
     safeEmit(DashboardSummaryLoading(), emit);

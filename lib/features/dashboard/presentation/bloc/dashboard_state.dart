@@ -16,13 +16,20 @@ class GetAllExpensesSuccess extends DashboardStates {
   final List<ExpenseEntity> expensesList;
   final String? currentFilter;
 
+
   const GetAllExpensesSuccess({
     required this.expensesList,
     this.currentFilter,
+
   });
 
   @override
   List<Object?> get props => [expensesList, currentFilter];
+}
+
+class GetAllExpensesLastPage extends DashboardStates{
+  final List<ExpenseEntity> expensesList;
+  GetAllExpensesLastPage(this.expensesList);
 }
 
 class GetAllExpensesError extends DashboardStates {
