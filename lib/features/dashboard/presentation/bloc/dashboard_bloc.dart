@@ -59,7 +59,7 @@ class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
       },
     );
   }
-
+////////////////////////////////////////////////////////////////////////////////
   Future<void> _handleLoadDashboardSummary(
       LoadDashboardSummary event, Emitter<DashboardStates> emit) async {
     print('DashboardBloc: Loading summary with filter: ${event.filterType}');
@@ -84,14 +84,14 @@ class DashboardBloc extends Bloc<DashboardEvents, DashboardStates>
       },
     );
   }
-
+////////////////////////////////////////////////////////////////////////////////
   Future<void> _handleRefreshExpenses(
       RefreshAllExpensesEvents event, Emitter<DashboardStates> emit) async {
     print('DashboardBloc: Refreshing expenses with filter: ${event.filterType}');
     // Instead of calling add(), we'll handle this in the UI
     // The UI should call both events separately
   }
-
+////////////////////////////////////////////////////////////////////////////////
   Future<void> _handleApplyFilter(
       ApplyFilter event, Emitter<DashboardStates> emit) async {
     print('DashboardBloc: Applying filter: ${event.filterType}');
