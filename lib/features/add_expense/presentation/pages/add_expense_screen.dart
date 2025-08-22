@@ -21,7 +21,7 @@ class AddExpenseScreen extends StatefulWidget {
 
 class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
-  String selectedCategory = 'Food & Dining';
+  String selectedCategory = 'Food';
   final _amountController = TextEditingController();
   final _notesController = TextEditingController();
 
@@ -108,7 +108,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       ),
     );
   }
-
+////////////////////////////////////////////////////////////////////////////////
   Widget _buildCategorySection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,13 +130,13 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           ),
           value: selectedCategory,
           items: [
-            'Food & Dining',
-            'Transportation',
+            'Food',
+            'Transport',
             'Shopping',
             'Entertainment',
-            'Healthcare',
-            'Utilities',
-            'Housing',
+            'Health',
+            'Bills',
+            'Home',
             'Other'
           ].map((String value) {
             return DropdownMenuItem<String>(
@@ -159,7 +159,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       ],
     );
   }
-
+////////////////////////////////////////////////////////////////////////////////
   Widget _buildAmountSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,7 +198,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       ],
     );
   }
-
+////////////////////////////////////////////////////////////////////////////////
   Widget _buildDateSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,7 +233,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       ],
     );
   }
-
+////////////////////////////////////////////////////////////////////////////////
   Widget _buildCurrencySection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,7 +280,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       ],
     );
   }
-
+////////////////////////////////////////////////////////////////////////////////
   Widget _buildReceiptSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -317,13 +317,13 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       ],
     );
   }
-
+////////////////////////////////////////////////////////////////////////////////
   Widget _buildCategoryGridView() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         CustomTextWidget(
-          text: 'Quick Categories',
+          text: 'Categories',
           fontSize: 16.sp,
           fontWeight: FontWeight.w600,
           fontColor: AppColors.textPrimary,
@@ -355,12 +355,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       ],
     );
   }
-
+////////////////////////////////////////////////////////////////////////////////
   Widget _buildSaveButton() {
     return BlocBuilder<AddExpenseBloc, ExpenseState>(
       builder: (context, state) {
         final isLoading = state is AddExpenseLoading;
-
         return Padding(
           padding: EdgeInsets.all(16.w),
           child: SizedBox(
@@ -395,7 +394,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       },
     );
   }
-
+////////////////////////////////////////////////////////////////////////////////
   Future<void> _selectDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -409,7 +408,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       });
     }
   }
-
+////////////////////////////////////////////////////////////////////////////////
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
@@ -420,12 +419,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       });
     }
   }
-
+////////////////////////////////////////////////////////////////////////////////
   void _saveExpense() {
     if (!_formKey.currentState!.validate()) return;
-
     final amount = double.parse(_amountController.text);
-
     context.read<AddExpenseBloc>().add(AddExpense(
           category: selectedCategory,
           amount: amount,
